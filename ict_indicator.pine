@@ -2690,22 +2690,22 @@ if showADR and (updateCounter % updateFreq == 0)
 
 
 // ===========================================================================================================================================================================================
-// ================================================================================= NY AM Session ADR =======================================================================================
+// ================================================================================= NY Session ADR =======================================================================================
 // ===========================================================================================================================================================================================
 
-groupAMADR = "- - - - - - - - - - - NY AM Session ADR (7am-12pm) - - - - - - - - - - - "
+groupSessionADR = "- - - - - - - - - - - NY Session ADR - - - - - - - - - - - "
 
 // Table display settings
-amAdrTablePosition = input.string("bottom_left", title="NY AM ADR Table Position", options=["top_left", "top_center", "top_right", "middle_left", "middle_center", "middle_right", "bottom_left", "bottom_center", "bottom_right"], group=groupAMADR)
-amAdrTableSize = input.string("normal", title="NY AM ADR Table Size", options=["tiny", "small", "normal", "large", "huge"], group=groupAMADR)
+nySessionAdrTablePosition = input.string("bottom_left", title="NY Session ADR Table Position", options=["top_left", "top_center", "top_right", "middle_left", "middle_center", "middle_right", "bottom_left", "bottom_center", "bottom_right"], group=groupSessionADR)
+nySessionAdrTableSize = input.string("normal", title="NY Session ADR Table Size", options=["tiny", "small", "normal", "large", "huge"], group=groupSessionADR)
 
 // Display options
-amShowCurrentRange = input.bool(true, title="Show Current NY AM Range", group=groupAMADR)
-amShowRangeCompletion = input.bool(true, title="Show NY AM Range Completion %", group=groupAMADR)
-amShowCurrentADRLines = input.bool(true, title="Show Current NY AM Session ADR Lines", group=groupAMADR)
+amShowCurrentRange = input.bool(true, title="Show Current NY AM Range", group=groupSessionADR)
+amShowRangeCompletion = input.bool(true, title="Show NY AM Range Completion %", group=groupSessionADR)
+amShowCurrentADRLines = input.bool(true, title="Show Current NY AM Session ADR Lines", group=groupSessionADR)
 
 // ADR Projection Settings
-amAdrDirection = input.string("Both", "NY AM ADR Direction", options=["Bullish", "Bearish", "Both"], group=groupAMADR)
+amAdrDirection = input.string("Both", "NY AM ADR Direction", options=["Bullish", "Bearish", "Both"], group=groupSessionADR)
 amShowBullishADR = amAdrDirection == "Bullish" or amAdrDirection == "Both"
 amShowBearishADR = amAdrDirection == "Bearish" or amAdrDirection == "Both"
 
@@ -2714,16 +2714,30 @@ showAMADR = showAMSessionADRMaster and timeframe.in_seconds() < 86400
 
 // --- Constants ---
 amAdrStartHour = 7
-amAdrEndHour = 12 // Session is 07:00 to 11:59, so we check for hour < 12
+amAdrEndHour = 12 // Session is 07:00 to 11:59
+pmAdrStartHour = 12
+pmAdrEndHour = 15 // Session is 12:00 to 14:59
+
+// ADR Projection Settings
+pmAdrDirection = input.string("Both", "NY PM ADR Direction", options=["Bullish", "Bearish", "Both"], group=groupSessionADR)
+pmShowBullishADR = pmAdrDirection == "Bullish" or pmAdrDirection == "Both"
+pmShowBearishADR = pmAdrDirection == "Bearish" or pmAdrDirection == "Both"
+pmShowCurrentADRLines = input.bool(true, title="Show Current NY PM Session ADR Lines", group=groupSessionADR)
+
 
 // --- State Variables ---
 var float[] amDailyRanges = array.new_float()
+var float[] pmDailyRanges = array.new_float()
 var float currentAMADR = na
-var table amAdrTable = na
+var float currentPMADR = na
+var table nySessionAdrTable = na
 var int amSessionStartBar = na
+var int pmSessionStartBar = na
 
 var float amSessionHigh = na
 var float amSessionLow = na
+var float pmSessionHigh = na
+var float pmSessionLow = na
 
 // --- Drawing Objects ---
 // For LIVE projections on the current day
@@ -2731,6 +2745,11 @@ var line amCurrentBullishLine = na
 var line amCurrentBearishLine = na
 var label amCurrentBullishLabel = na
 var label amCurrentBearishLabel = na
+var line pmCurrentBullishLine = na
+var line pmCurrentBearishLine = na
+var label pmCurrentBullishLabel = na
+var label pmCurrentBearishLabel = na
+
 
 // For HISTORICAL projections on previous days
 var line[] amBullishADRLines = array.new<line>()
@@ -2744,6 +2763,8 @@ var label[] amBearishADRLabels = array.new<label>()
 isNewDay_AM = ta.change(time("D"))
 // Check if the current bar is within the AM session (7:00:00 to 11:59:59)
 isInAmSession = hour(time, timezone) >= amAdrStartHour and hour(time, timezone) < amAdrEndHour
+// Check if the current bar is within the PM session (12:00:00 to 14:59:59)
+isInPmSession = hour(time, timezone) >= pmAdrStartHour and hour(time, timezone) < pmAdrEndHour
 
 
 // --- Helper Function for Cleanup ---
@@ -2797,10 +2818,21 @@ if showAMADR
                     array.push(amBearishADRLines, bearishLine)
                     array.push(amBearishADRLabels, bearishLabel)
 
+        // --- Process Previous PM Session ---
+        prevPmHigh = pmSessionHigh[1]
+        prevPmLow = pmSessionLow[1]
+        if not na(prevPmHigh) and not na(prevPmLow)
+            [rangeVal, _] = calculateRangeInUnits(prevPmHigh, prevPmLow)
+            array.push(pmDailyRanges, rangeVal)
+            while array.size(pmDailyRanges) > globalLookbackPeriod
+                array.shift(pmDailyRanges)
+            if array.size(pmDailyRanges) > 0
+                sumOfRanges = array.sum(pmDailyRanges)
+                currentPMADR := sumOfRanges / array.size(pmDailyRanges)
+
         // Reset trackers to `na` for the new day's session.
-        amSessionHigh := na
-        amSessionLow := na
-        amSessionStartBar := na
+        amSessionHigh := na, amSessionLow := na, amSessionStartBar := na
+        pmSessionHigh := na, pmSessionLow := na, pmSessionStartBar := na
 
         // Cleanup old historical drawings
         cleanupHistoricalAmDrawings()
@@ -2818,6 +2850,16 @@ if showAMADR
         else
             amSessionHigh := math.max(amSessionHigh, high)
             amSessionLow := math.min(amSessionLow, low)
+
+    // On every bar, check if we are inside the PM session window.
+    if isInPmSession
+        if na(pmSessionHigh)
+            pmSessionHigh := high
+            pmSessionLow := low
+            pmSessionStartBar := bar_index
+        else
+            pmSessionHigh := math.max(pmSessionHigh, high)
+            pmSessionLow := math.min(pmSessionLow, low)
 
     // --- Live Projections ---
     // Only draw projection lines if the feature is enabled, we have a valid ADR, and a session is active.
@@ -2854,14 +2896,75 @@ if showAMADR
                 line.delete(amCurrentBearishLine), label.delete(amCurrentBearishLabel)
                 amCurrentBearishLine := na, amCurrentBearishLabel := na
 
+    // --- Live Projections ---
+    if amShowCurrentADRLines and not na(currentAMADR) and not na(amSessionHigh)
+        if isInAmSession
+            currentBullishLevel = amSessionLow + currentAMADR
+            currentBearishLevel = amSessionHigh - currentAMADR
+
+            if amShowBullishADR
+                if na(amCurrentBullishLine)
+                    amCurrentBullishLine := line.new(amSessionStartBar, currentBullishLevel, bar_index, currentBullishLevel, extend=extend.right, color=adrLineColorUp, style=line.style_dashed, width=1)
+                    amCurrentBullishLabel := label.new(bar_index, currentBullishLevel, "Live NY AM ADR | Bullish", style=label.style_label_left, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(amCurrentBullishLine, amSessionStartBar, currentBullishLevel)
+                    line.set_x2(amCurrentBullishLine, bar_index)
+                    label.set_xy(amCurrentBullishLabel, bar_index, currentBullishLevel)
+
+            if amShowBearishADR
+                if na(amCurrentBearishLine)
+                    amCurrentBearishLine := line.new(amSessionStartBar, currentBearishLevel, bar_index, currentBearishLevel, extend=extend.right, color=adrLineColorDn, style=line.style_dashed, width=1)
+                    amCurrentBearishLabel := label.new(bar_index, currentBearishLevel, "Live NY AM ADR | Bearish", style=label.style_label_left, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(amCurrentBearishLine, amSessionStartBar, currentBearishLevel)
+                    line.set_x2(amCurrentBearishLine, bar_index)
+                    label.set_xy(amCurrentBearishLabel, bar_index, currentBearishLevel)
+        else
+            if not na(amCurrentBullishLine)
+                line.delete(amCurrentBullishLine), label.delete(amCurrentBullishLabel)
+                amCurrentBullishLine := na, amCurrentBullishLabel := na
+            if not na(amCurrentBearishLine)
+                line.delete(amCurrentBearishLine), label.delete(amCurrentBearishLabel)
+                amCurrentBearishLine := na, amCurrentBearishLabel := na
+
+    if pmShowCurrentADRLines and not na(currentPMADR) and not na(pmSessionHigh)
+        if isInPmSession
+            currentBullishLevel = pmSessionLow + currentPMADR
+            currentBearishLevel = pmSessionHigh - currentPMADR
+
+            if pmShowBullishADR
+                if na(pmCurrentBullishLine)
+                    pmCurrentBullishLine := line.new(pmSessionStartBar, currentBullishLevel, bar_index, currentBullishLevel, extend=extend.right, color=adrLineColorUp, style=line.style_dashed, width=1)
+                    pmCurrentBullishLabel := label.new(bar_index, currentBullishLevel, "Live NY PM ADR | Bullish", style=label.style_label_left, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(pmCurrentBullishLine, pmSessionStartBar, currentBullishLevel)
+                    line.set_x2(pmCurrentBullishLine, bar_index)
+                    label.set_xy(pmCurrentBullishLabel, bar_index, currentBullishLevel)
+
+            if pmShowBearishADR
+                if na(pmCurrentBearishLine)
+                    pmCurrentBearishLine := line.new(pmSessionStartBar, currentBearishLevel, bar_index, currentBearishLevel, extend=extend.right, color=adrLineColorDn, style=line.style_dashed, width=1)
+                    pmCurrentBearishLabel := label.new(bar_index, currentBearishLevel, "Live NY PM ADR | Bearish", style=label.style_label_left, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(pmCurrentBearishLine, pmSessionStartBar, currentBearishLevel)
+                    line.set_x2(pmCurrentBearishLine, bar_index)
+                    label.set_xy(pmCurrentBearishLabel, bar_index, currentBearishLevel)
+        else
+            if not na(pmCurrentBullishLine)
+                line.delete(pmCurrentBullishLine), label.delete(pmCurrentBullishLabel)
+                pmCurrentBullishLine := na, pmCurrentBullishLabel := na
+            if not na(pmCurrentBearishLine)
+                line.delete(pmCurrentBearishLine), label.delete(pmCurrentBearishLabel)
+                pmCurrentBearishLine := na, pmCurrentBearishLabel := na
+
     // --- Table Update ---
     // On the last bar of the chart, draw/update the display table.
     if barstate.islast
-        if not na(amAdrTable)
-            table.delete(amAdrTable)
+        if not na(nySessionAdrTable)
+            table.delete(nySessionAdrTable)
 
-        tablePos = getTablePosition(amAdrTablePosition)
-        tableSize = getTableSize(amAdrTableSize)
+        tablePos = getTablePosition(nySessionAdrTablePosition)
+        tableSize = getTableSize(nySessionAdrTableSize)
 
         rowCount = 2
         if amShowCurrentRange
@@ -2869,41 +2972,57 @@ if showAMADR
         if amShowRangeCompletion
             rowCount += 1
 
-        amAdrTable := table.new(position=tablePos, columns=2, rows=rowCount, bgcolor=adrTableBgColor, border_width=1, border_color=adrTableBorderColor)
+        nySessionAdrTable := table.new(position=tablePos, columns=3, rows=rowCount, bgcolor=adrTableBgColor, border_width=1, border_color=adrTableBorderColor)
 
-        daysCount = array.size(amDailyRanges)
-        daysText = daysCount == 0 ? "No Data" : str.tostring(daysCount) + (daysCount == 1 ? " Day" : " Days")
+        // --- AM Data Prep ---
+        amDaysCount = array.size(amDailyRanges)
+        amDaysText = amDaysCount == 0 ? "No Data" : str.tostring(amDaysCount)
+        [amCurrentDayRangeValue, amCurrentUnits] = calculateRangeInUnits(amSessionHigh, amSessionLow)
+        amAdrValueStr = na(currentAMADR) ? "..." : formatRangeValue(currentAMADR, amCurrentUnits)
+        amCurrentRangeStr = na(amSessionHigh) ? "N/A" : formatRangeValue(amCurrentDayRangeValue, amCurrentUnits)
+        amRangeCompletion = not na(currentAMADR) and currentAMADR > 0 and not na(amSessionHigh) ? (amCurrentDayRangeValue / currentAMADR) * 100 : 0.0
+        amCompletionStr = na(amSessionHigh) ? "N/A" : str.tostring(amRangeCompletion, "#.#") + "%"
 
-        [currentDayRangeValue, currentUnits] = calculateRangeInUnits(amSessionHigh, amSessionLow)
+        // --- PM Data Prep (Placeholders for now) ---
+        pmDaysCount = array.size(pmDailyRanges)
+        pmDaysText = pmDaysCount == 0 ? "No Data" : str.tostring(pmDaysCount)
+        [pmCurrentDayRangeValue, pmCurrentUnits] = calculateRangeInUnits(pmSessionHigh, pmSessionLow)
+        pmAdrValueStr = na(currentPMADR) ? "..." : formatRangeValue(currentPMADR, pmCurrentUnits)
+        pmCurrentRangeStr = na(pmSessionHigh) ? "N/A" : formatRangeValue(pmCurrentDayRangeValue, pmCurrentUnits)
+        pmRangeCompletion = not na(currentPMADR) and currentPMADR > 0 and not na(pmSessionHigh) ? (pmCurrentDayRangeValue / currentPMADR) * 100 : 0.0
+        pmCompletionStr = na(pmSessionHigh) ? "N/A" : str.tostring(pmRangeCompletion, "#.#") + "%"
 
-        adrValueStr = na(currentAMADR) ? "Calculating..." : formatRangeValue(currentAMADR, currentUnits)
-        currentRangeStr = na(amSessionHigh) ? "N/A" : formatRangeValue(currentDayRangeValue, currentUnits)
+        // --- Headers ---
+        table.cell(nySessionAdrTable, 0, 0, "NY Session ADR (" + amDaysText + "/" + pmDaysText + " Days)", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80))
+        table.cell(nySessionAdrTable, 1, 0, "AM", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80), text_halign=text.align_center)
+        table.cell(nySessionAdrTable, 2, 0, "PM", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80), text_halign=text.align_center)
 
-        rangeCompletion = not na(currentAMADR) and currentAMADR > 0 and not na(amSessionHigh) ? (currentDayRangeValue / currentAMADR) * 100 : 0.0
-        completionStr = na(amSessionHigh) ? "N/A" : str.tostring(rangeCompletion, "#.#") + "%"
+        // --- ADR Values ---
+        table.cell(nySessionAdrTable, 0, 1, "ADR", text_color=adrTableTextColor, text_size=tableSize)
+        table.cell(nySessionAdrTable, 1, 1, amAdrValueStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
+        table.cell(nySessionAdrTable, 2, 1, pmAdrValueStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
 
-        table.cell(amAdrTable, 0, 0, "NY AM ADR Info", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80))
-        table.cell(amAdrTable, 1, 0, daysText, text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80))
-
-        table.cell(amAdrTable, 0, 1, "NY AM ADR", text_color=adrTableTextColor, text_size=tableSize)
-        table.cell(amAdrTable, 1, 1, adrValueStr, text_color=adrTableTextColor, text_size=tableSize)
-
+        // --- Current Range ---
         currentRow = 2
         if amShowCurrentRange
-            table.cell(amAdrTable, 0, currentRow, "Current AM", text_color=adrTableTextColor, text_size=tableSize)
-            table.cell(amAdrTable, 1, currentRow, currentRangeStr, text_color=adrTableTextColor, text_size=tableSize)
+            table.cell(nySessionAdrTable, 0, currentRow, "Current", text_color=adrTableTextColor, text_size=tableSize)
+            table.cell(nySessionAdrTable, 1, currentRow, amCurrentRangeStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
+            table.cell(nySessionAdrTable, 2, currentRow, pmCurrentRangeStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
             currentRow += 1
 
+        // --- Completion % ---
         if amShowRangeCompletion
-            completionColor = rangeCompletion >= 100 ? adrCompletionHighColor : rangeCompletion >= 75 ? adrCompletionMidColor : adrCompletionLowColor
-            table.cell(amAdrTable, 0, currentRow, "AM Complete", text_color=adrTableTextColor, text_size=tableSize)
-            table.cell(amAdrTable, 1, currentRow, completionStr, text_color=adrTableTextColor, text_size=tableSize, bgcolor=completionColor)
+            amCompletionColor = amRangeCompletion >= 100 ? adrCompletionHighColor : amRangeCompletion >= 75 ? adrCompletionMidColor : adrCompletionLowColor
+            pmCompletionColor = pmRangeCompletion >= 100 ? adrCompletionHighColor : pmRangeCompletion >= 75 ? adrCompletionMidColor : adrCompletionLowColor
+            table.cell(nySessionAdrTable, 0, currentRow, "Complete", text_color=adrTableTextColor, text_size=tableSize)
+            table.cell(nySessionAdrTable, 1, currentRow, amCompletionStr, text_color=adrTableTextColor, text_size=tableSize, bgcolor=amCompletionColor, text_halign=text.align_center)
+            table.cell(nySessionAdrTable, 2, currentRow, pmCompletionStr, text_color=adrTableTextColor, text_size=tableSize, bgcolor=pmCompletionColor, text_halign=text.align_center)
 
 // --- Cleanup on Master Toggle Off ---
 if not showAMADR
-    if not na(amAdrTable)
-        table.delete(amAdrTable)
-        amAdrTable := na
+    if not na(nySessionAdrTable)
+        table.delete(nySessionAdrTable)
+        nySessionAdrTable := na
     // Cleanup live lines
     if not na(amCurrentBullishLine)
         line.delete(amCurrentBullishLine), label.delete(amCurrentBullishLabel)
@@ -2911,5 +3030,11 @@ if not showAMADR
     if not na(amCurrentBearishLine)
         line.delete(amCurrentBearishLine), label.delete(amCurrentBearishLabel)
         amCurrentBearishLine := na, amCurrentBearishLabel := na
+    if not na(pmCurrentBullishLine)
+        line.delete(pmCurrentBullishLine), label.delete(pmCurrentBullishLabel)
+        pmCurrentBullishLine := na, pmCurrentBullishLabel := na
+    if not na(pmCurrentBearishLine)
+        line.delete(pmCurrentBearishLine), label.delete(pmCurrentBearishLabel)
+        pmCurrentBearishLine := na, pmCurrentBearishLabel := na
     // Cleanup historical lines
     cleanupHistoricalAmDrawings()
