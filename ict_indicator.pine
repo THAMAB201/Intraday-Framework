@@ -1,0 +1,3040 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © SunovaBeach (Modified)
+
+//@version=5
+indicator("ICT Intraday Framework", overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+timezone = "America/New_York"
+// ===========================================================================================================================================================================================
+// ================================================================================= Master Controls =======================================================================================
+// ===========================================================================================================================================================================================
+
+groupMaster = "- - - - - - - - - - - - -  Master Controls - - - - - - - - - - - - - -  "
+
+colorTheme = input.string("Light", "Color Theme", options=["Light", "Dark", "Party"], group=groupMaster)
+
+showIntraDayGap = input.bool(true, " Intraday Gap", group=groupMaster)
+showAMNYMarketMaker = input.bool(true, " AM NY Market Maker", group=groupMaster)
+showPMNYMarketMaker = input.bool(true, " PM NY Market Maker", group=groupMaster)
+showAsiaRangeMaster = input.bool(true, " Asia Range", group=groupMaster)
+showVerticalLinesMaster = input.bool(true, " Vertical Lines", group=groupMaster)
+showSevenNineRangeMaster = input.bool(true, " 7-9am Range", group=groupMaster)
+showPrevDayHLMaster = input.bool(true, " Previous Day High/Low", group=groupMaster)
+showADRMaster = input.bool(true, " Average Daily Range", group=groupMaster)
+showAMSessionADRMaster = input.bool(true, " AM Session ADR", group=groupMaster)
+
+
+// ===========================================================================================================================================================================================
+// ================================================================================= Color Themes ==========================================================================================
+// ===========================================================================================================================================================================================
+
+// --- Light Theme Colors ---
+color L_gapBox = color.rgb(13, 71, 196)
+color L_prevDayCloseLine = color.rgb(83, 38, 245, 20)
+color L_prevDayCloseLabelBg = color.rgb(83, 38, 245, 20)
+color L_prevDayCloseLabelText = color.white
+color L_gapMidline = color.new(color.black, 0)
+color L_gapPriceLabelBg = color.new(color.white, 100)
+color L_gapPriceLabelText = color.black
+color L_gapExtLine = color.rgb(0, 0, 0, 38)
+color L_nwogLabelBg = color.new(#e90000, 100)
+color L_nwogLabelText = color.rgb(0, 0, 0)
+color L_fpiBoxText = color.black
+color L_fpiPriceLabelBg = color.rgb(33, 149, 243, 100)
+color L_fpiPriceLabelText = color.rgb(0, 0, 0)
+color L_fpiProjectionUp = color.rgb(17, 57, 193, 60)
+color L_fpiProjectionDn = color.rgb(17, 57, 193, 60)
+color L_mmBearish = color.new(color.red, 70)
+color L_mmBullish = color.new(color.green, 70)
+color L_macroBox = color.new(color.gray, 70)
+color L_macroLabelBg = color.new(color.white, 100)
+color L_asiaBox = color.new(#535251, 80)
+color L_asiaLabelBg = color.new(color.white, 100)
+color L_asiaLabelText = color.black
+color L_asiaPriceLabelText = color.black
+color L_asiaUnsweptLabelText = color.black
+color L_vertLine = color.new(color.black, 85)
+color L_startDayLine = color.new(color.black, 60)
+color L_sevenNineBox = color.new(#4a5568, 80)
+color L_sevenNineLabelBg = color.new(color.white, 100)
+color L_sevenNineLabelText = color.black
+color L_sevenNinePriceLabelText = color.black
+color L_sevenNineUnsweptLabelText = color.black
+color L_pdh = color.new(color.green, 30)
+color L_pdl = color.new(color.red, 30)
+color L_pdhlLabelBg = color.new(color.white, 100)
+color L_adrUp = color.new(color.green, 0)
+color L_adrDn = color.new(color.red, 0)
+color L_adrLabelText = color.white
+color L_adrCompletionHigh = color.new(color.red, 20)
+color L_adrCompletionMid = color.new(color.orange, 20)
+color L_adrCompletionLow = color.new(color.green, 20)
+color L_textColor = color.black
+color L_tableBg = color.new(#1e1e1e, 10)
+color L_tableText = color.white
+color L_tableBorder = color.new(#2196f3, 50)
+
+// --- Dark Theme Colors ---
+color D_gapBox = color.rgb(0, 50, 150)
+color D_prevDayCloseLine = color.rgb(128, 128, 255, 40)
+color D_prevDayCloseLabelBg = color.rgb(128, 128, 255, 40)
+color D_prevDayCloseLabelText = color.white
+color D_gapMidline = color.new(color.white, 20)
+color D_gapPriceLabelBg = color.new(color.gray, 90)
+color D_gapPriceLabelText = color.white
+color D_gapExtLine = color.rgb(255, 255, 255, 38)
+color D_nwogLabelBg = color.new(#ff6347, 80)
+color D_nwogLabelText = color.white
+color D_fpiBoxText = color.white
+color D_fpiPriceLabelBg = color.rgb(80, 180, 255, 90)
+color D_fpiPriceLabelText = color.white
+color D_fpiProjectionUp = color.rgb(20, 70, 220, 70)
+color D_fpiProjectionDn = color.rgb(20, 70, 220, 70)
+color D_mmBearish = color.new(color.maroon, 60)
+color D_mmBullish = color.new(color.teal, 60)
+color D_macroBox = color.new(color.gray, 80)
+color D_macroLabelBg = color.new(color.gray, 90)
+color D_asiaBox = color.new(#333333, 80)
+color D_asiaLabelBg = color.new(color.gray, 90)
+color D_asiaLabelText = color.white
+color D_asiaPriceLabelText = color.white
+color D_asiaUnsweptLabelText = color.white
+color D_vertLine = color.new(color.white, 85)
+color D_startDayLine = color.new(color.white, 60)
+color D_sevenNineBox = color.new(#404040, 80)
+color D_sevenNineLabelBg = color.new(color.gray, 90)
+color D_sevenNineLabelText = color.white
+color D_sevenNinePriceLabelText = color.white
+color D_sevenNineUnsweptLabelText = color.white
+color D_pdh = color.new(color.teal, 40)
+color D_pdl = color.new(color.maroon, 40)
+color D_pdhlLabelBg = color.new(color.gray, 90)
+color D_adrUp = color.new(color.teal, 20)
+color D_adrDn = color.new(color.maroon, 20)
+color D_adrLabelText = color.white
+color D_adrCompletionHigh = color.new(color.maroon, 40)
+color D_adrCompletionMid = color.new(#ff8c00, 40)
+color D_adrCompletionLow = color.new(color.teal, 40)
+color D_textColor = color.white
+color D_tableBg = color.new(#363a45, 10)
+color D_tableText = color.white
+color D_tableBorder = color.new(#5d606b, 50)
+
+// --- Party Theme Colors ---
+color P_gapBox = color.new(color.fuchsia, 70)
+color P_prevDayCloseLine = color.new(color.yellow, 30)
+color P_prevDayCloseLabelBg = color.new(color.yellow, 30)
+color P_prevDayCloseLabelText = color.black
+color P_gapMidline = color.new(color.yellow, 0)
+color P_gapPriceLabelBg = color.new(color.lime, 90)
+color P_gapPriceLabelText = color.black
+color P_gapExtLine = color.new(color.orange, 38)
+color P_nwogLabelBg = color.new(color.red, 80)
+color P_nwogLabelText = color.yellow
+color P_fpiBoxText = color.black
+color P_fpiPriceLabelBg = color.new(color.aqua, 90)
+color P_fpiPriceLabelText = color.black
+color P_fpiProjectionUp = color.new(color.yellow, 70)
+color P_fpiProjectionDn = color.new(color.lime, 70)
+color P_mmBearish = color.new(color.red, 60)
+color P_mmBullish = color.new(color.blue, 60)
+color P_macroBox = color.new(color.aqua, 80)
+color P_macroLabelBg = color.new(color.orange, 90)
+color P_asiaBox = color.new(color.purple, 80)
+color P_asiaLabelBg = color.new(color.fuchsia, 90)
+color P_asiaLabelText = color.white
+color P_asiaPriceLabelText = color.black
+color P_asiaUnsweptLabelText = color.white
+color P_vertLine = color.new(color.orange, 85)
+color P_startDayLine = color.new(color.lime, 60)
+color P_sevenNineBox = color.new(color.silver, 80)
+color P_sevenNineLabelBg = color.new(color.teal, 90)
+color P_sevenNineLabelText = color.white
+color P_sevenNinePriceLabelText = color.black
+color P_sevenNineUnsweptLabelText = color.white
+color P_pdh = color.new(color.lime, 30)
+color P_pdl = color.new(color.red, 30)
+color P_pdhlLabelBg = color.new(color.yellow, 90)
+color P_adrUp = color.new(color.yellow, 20)
+color P_adrDn = color.new(color.fuchsia, 20)
+color P_adrLabelText = color.black
+color P_adrCompletionHigh = color.new(color.red, 40)
+color P_adrCompletionMid = color.new(color.orange, 40)
+color P_adrCompletionLow = color.new(color.lime, 40)
+color P_textColor = color.black
+color P_tableBg = color.new(color.orange, 10)
+color P_tableText = color.black
+color P_tableBorder = color.new(color.fuchsia, 50)
+
+// --- Assign Colors Based on Theme ---
+var color boxColorRTH = colorTheme == "Dark" ? D_gapBox : colorTheme == "Party" ? P_gapBox : L_gapBox
+var color boxColorNDOG = boxColorRTH
+var color prevDayCloseLineColor = colorTheme == "Dark" ? D_prevDayCloseLine : colorTheme == "Party" ? P_prevDayCloseLine : L_prevDayCloseLine
+var color prevDayCloseLabelBgColor = colorTheme == "Dark" ? D_prevDayCloseLabelBg : colorTheme == "Party" ? P_prevDayCloseLabelBg : L_prevDayCloseLabelBg
+var color prevDayCloseLabelTextColor = colorTheme == "Dark" ? D_prevDayCloseLabelText : colorTheme == "Party" ? P_prevDayCloseLabelText : L_prevDayCloseLabelText
+var color gapMidlineColor = colorTheme == "Dark" ? D_gapMidline : colorTheme == "Party" ? P_gapMidline : L_gapMidline
+var color gapPriceLabelBgColor = colorTheme == "Dark" ? D_gapPriceLabelBg : colorTheme == "Party" ? P_gapPriceLabelBg : L_gapPriceLabelBg
+var color gapPriceLabelTextColor = colorTheme == "Dark" ? D_gapPriceLabelText : colorTheme == "Party" ? P_gapPriceLabelText : L_gapPriceLabelText
+var color gapExtLineColor = colorTheme == "Dark" ? D_gapExtLine : colorTheme == "Party" ? P_gapExtLine : L_gapExtLine
+var color nwogLabelBgColor = colorTheme == "Dark" ? D_nwogLabelBg : colorTheme == "Party" ? P_nwogLabelBg : L_nwogLabelBg
+var color nwogLabelTextColor = colorTheme == "Dark" ? D_nwogLabelText : colorTheme == "Party" ? P_nwogLabelText : L_nwogLabelText
+var color fpiBoxTextColor = colorTheme == "Dark" ? D_fpiBoxText : colorTheme == "Party" ? P_fpiBoxText : L_fpiBoxText
+var color fpiPriceLabelBgColor = colorTheme == "Dark" ? D_fpiPriceLabelBg : colorTheme == "Party" ? P_fpiPriceLabelBg : L_fpiPriceLabelBg
+var color fpiPriceLabelTextColor = colorTheme == "Dark" ? D_fpiPriceLabelText : colorTheme == "Party" ? P_fpiPriceLabelText : L_fpiPriceLabelText
+var color fpiDashedColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color priceLineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color fpiProjectionColorUp = colorTheme == "Dark" ? D_fpiProjectionUp : colorTheme == "Party" ? P_fpiProjectionUp : L_fpiProjectionUp
+var color fpiProjectionColorDn = colorTheme == "Dark" ? D_fpiProjectionDn : colorTheme == "Party" ? P_fpiProjectionDn : L_fpiProjectionDn
+var color mmBearishImbColor = colorTheme == "Dark" ? D_mmBearish : colorTheme == "Party" ? P_mmBearish : L_mmBearish
+var color mmBullishImbColor = colorTheme == "Dark" ? D_mmBullish : colorTheme == "Party" ? P_mmBullish : L_mmBullish
+var color mmImbLineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color mmLabelTextColor = colorTheme == "Dark" ? color.black : colorTheme == "Party" ? color.white : color.white
+var color CM_macroBoxColor = colorTheme == "Dark" ? D_macroBox : colorTheme == "Party" ? P_macroBox : L_macroBox
+var color CM_macroLineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color CM_macroTextColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color CM_macroLabelBgColor = colorTheme == "Dark" ? D_macroLabelBg : colorTheme == "Party" ? P_macroLabelBg : L_macroLabelBg
+var color asiaBoxColor = colorTheme == "Dark" ? D_asiaBox : colorTheme == "Party" ? P_asiaBox : L_asiaBox
+var color asiaLineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color asiaLabelBgColor = colorTheme == "Dark" ? D_asiaLabelBg : colorTheme == "Party" ? P_asiaLabelBg : L_asiaLabelBg
+var color asiaLabelTextColor = colorTheme == "Dark" ? D_asiaLabelText : colorTheme == "Party" ? P_asiaLabelText : L_asiaLabelText
+var color asiaPriceLabelTextColor = colorTheme == "Dark" ? D_asiaPriceLabelText : colorTheme == "Party" ? P_asiaPriceLabelText : L_asiaPriceLabelText
+var color asiaUnsweptLabelTextColor = colorTheme == "Dark" ? D_asiaUnsweptLabelText : colorTheme == "Party" ? P_asiaUnsweptLabelText : L_asiaUnsweptLabelText
+var color vertLineColor = colorTheme == "Dark" ? D_vertLine : colorTheme == "Party" ? P_vertLine : L_vertLine
+var color startDayLineColor = colorTheme == "Dark" ? D_startDayLine : colorTheme == "Party" ? P_startDayLine : L_startDayLine
+var color sevenNineBoxColor = colorTheme == "Dark" ? D_sevenNineBox : colorTheme == "Party" ? P_sevenNineBox : L_sevenNineBox
+var color sevenNineLineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color sevenNineLabelBgColor = colorTheme == "Dark" ? D_sevenNineLabelBg : colorTheme == "Party" ? P_sevenNineLabelBg : L_sevenNineLabelBg
+var color sevenNineLabelTextColor = colorTheme == "Dark" ? D_sevenNineLabelText : colorTheme == "Party" ? P_sevenNineLabelText : L_sevenNineLabelText
+var color sevenNinePriceLabelTextColor = colorTheme == "Dark" ? D_sevenNinePriceLabelText : colorTheme == "Party" ? P_sevenNinePriceLabelText : L_sevenNinePriceLabelText
+var color sevenNineUnsweptLabelTextColor = colorTheme == "Dark" ? D_sevenNineUnsweptLabelText : colorTheme == "Party" ? P_sevenNineUnsweptLabelText : L_sevenNineUnsweptLabelText
+var color bslColor = colorTheme == "Dark" ? D_pdh : colorTheme == "Party" ? P_pdh : L_pdh
+var color sslColor = colorTheme == "Dark" ? D_pdl : colorTheme == "Party" ? P_pdl : L_pdl
+var color asiaMidlineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color sevenNineBslColor = colorTheme == "Dark" ? D_pdh : colorTheme == "Party" ? P_pdh : L_pdh
+var color sevenNineSslColor = colorTheme == "Dark" ? D_pdl : colorTheme == "Party" ? P_pdl : L_pdl
+var color sevenNineMidlineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color prevDayHighColor = colorTheme == "Dark" ? D_pdh : colorTheme == "Party" ? P_pdh : L_pdh
+var color prevDayLowColor = colorTheme == "Dark" ? D_pdl : colorTheme == "Party" ? P_pdl : L_pdl
+var color prevDayTextColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color pdhlLabelBgColor = colorTheme == "Dark" ? D_pdhlLabelBg : colorTheme == "Party" ? P_pdhlLabelBg : L_pdhlLabelBg
+var color adrTableBgColor = colorTheme == "Dark" ? D_tableBg : colorTheme == "Party" ? P_tableBg : L_tableBg
+var color adrTableTextColor = colorTheme == "Dark" ? D_tableText : colorTheme == "Party" ? P_tableText : L_tableText
+var color adrTableBorderColor = colorTheme == "Dark" ? D_tableBorder : colorTheme == "Party" ? P_tableBorder : L_tableBorder
+var color adrLineColorUp = colorTheme == "Dark" ? D_adrUp : colorTheme == "Party" ? P_adrUp : L_adrUp
+var color adrLineColorDn = colorTheme == "Dark" ? D_adrDn : colorTheme == "Party" ? P_adrDn : L_adrDn
+var color adrLabelTextColor = colorTheme == "Dark" ? D_adrLabelText : colorTheme == "Party" ? P_adrLabelText : L_adrLabelText
+var color adrCompletionHighColor = colorTheme == "Dark" ? D_adrCompletionHigh : colorTheme == "Party" ? P_adrCompletionHigh : L_adrCompletionHigh
+var color adrCompletionMidColor = colorTheme == "Dark" ? D_adrCompletionMid : colorTheme == "Party" ? P_adrCompletionMid : L_adrCompletionMid
+var color adrCompletionLowColor = colorTheme == "Dark" ? D_adrCompletionLow : colorTheme == "Party" ? P_adrCompletionLow : L_adrCompletionLow
+
+// --- Assign Imbalance Colors Based on Theme ---
+var color CM_imbBoxColor = colorTheme == "Dark" ? D_fpiProjectionUp : colorTheme == "Party" ? P_fpiProjectionUp : L_fpiProjectionUp
+var color CM_imbLineColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color CM_imbTextColor = colorTheme == "Dark" ? D_textColor : colorTheme == "Party" ? P_textColor : L_textColor
+var color CM_imbLabelBgColor = colorTheme == "Dark" ? D_macroLabelBg : colorTheme == "Party" ? P_macroLabelBg : L_macroLabelBg
+
+
+// ===========================================================================================================================================================================================
+// ================================================================================= Global Settings==========================================================================================
+// ===========================================================================================================================================================================================
+
+groupGlobal = "- - - - - - - - - - - - - - Global Settings - - - - - - - - - - - - - - "
+globalLookbackPeriod = input.int(1, title="Days Lookback (All Components)", minval=1, group=groupGlobal)
+startTimeOption = input.string("3pm", "Start Of Day Time", options=["2pm", "3pm"], group=groupGlobal)
+startTimeHour = startTimeOption == "3pm" ? 15 : 14
+
+
+// --- NY Market Maker Persistent Drawing Objects ---
+var box mmHighestBearishBox = na
+var box mmLowestBearishBox = na
+var box mmHighestBullishBox = na
+var box mmLowestBullishBox = na
+var label mmHighestBearishLabel = na
+var label mmLowestBearishLabel = na
+var label mmHighestBullishLabel = na
+var label mmLowestBullishLabel = na
+
+// ===========================================================================================================================================================================================
+// ================================================================================= Time Definitions ========================================================================================
+// ===========================================================================================================================================================================================
+
+// Define the 3pm cutoff time used by several modules
+biasCutoffTime = timestamp(timezone, year, month, dayofmonth, 15, 0)
+
+
+// ===========================================================================================================================================================================================
+// ================================================================================= Intraday Gap Settings====================================================================================
+// ===========================================================================================================================================================================================
+
+groupETHGap = "- - - - - - - - - - - - IntraDayGap Settings - - - - - - - - - - - - "
+
+// Removed the enable toggle since it's now in master controls
+boxTransparency = input.int(95, title="Gap Transparency", minval=0, maxval=100, group=groupETHGap)
+// New input for extending ETH Gap lines to 3 PM
+extendETHGapLines = input.bool(true, "Extend Gap Lines to 3 PM", group=groupETHGap)
+// Dropdown for gap type selection
+gapTypeSelection = input.string("RTH", "Gap Type", options=["RTH", "NDOG/NWOG"], group=groupETHGap)
+
+// Set the effective setting based on master control
+showETHGap = showIntraDayGap
+
+// Retrieve close data based on gap type selection
+getCloseTime() =>
+	if gapTypeSelection == "RTH"
+		// RTH gap (4:14pm-9:30am)
+		[hour(time, "America/New_York") == 16 and minute(time, "America/New_York") == 14, 16, 14, "4:14pm"]
+	else
+		// NDOG/NWOG gap (4:59pm-6:00pm) - Corrected from 5:00pm to 4:59pm
+		[hour(time, "America/New_York") == 16 and minute(time, "America/New_York") == 59, 16, 59, "4:59pm"]
+
+[isCloseTime, closeHour, closeMinute, closeTimeDisplay] = getCloseTime()
+ptClose = request.security(syminfo.tickerid, "1", isCloseTime ? close : na, barmerge.gaps_off)
+ptTime = request.security(syminfo.tickerid, "1", isCloseTime ? time : na, barmerge.gaps_off)
+
+var float prevDayClose = na
+var int prevDayTime = na
+var int prevDayEndIndex = na
+var int prevDayDow = na // Save day-of-week for the close bar
+if not na(ptClose)
+	prevDayClose := ptClose
+	prevDayTime := ptTime
+	prevDayDow := dayofweek(ptTime)
+	prevDayEndIndex := bar_index
+
+nyHour = hour(time, "America/New_York")
+nyMinute = minute(time, "America/New_York")
+is_930 = (nyHour == 9 and nyMinute == 30)
+// For NDOG/NWOG, we need 6:00 PM identification
+is_6pm = (nyHour == 18 and nyMinute == 0)
+
+// RTH Gap storage arrays
+var box[] gapBoxes = array.new_box()
+var line[] gapExtLines = array.new_line() // New array for extended lines
+var line[] gapMidlines = array.new_line()
+var label[] gapMainLabels = array.new_label()
+var label[] gapPriceLabels = array.new_label()
+var label[] gapExtLabels = array.new_label() // New array for extended line labels
+var label[] gapExtPriceLabels = array.new_label() // New array for extended price labels
+
+var float ethGapHigh = na
+var float ethGapLow = na
+var int ethGapStartIndex = na
+var int ethGapEndIndex = na
+
+var line prevDayLine = na
+var label prevDayLabel = na
+
+// Track the first NWOG of the week
+var bool isFirstNWOGofWeek = true
+
+// Get day of week in text
+day_of_week_text() =>
+	dayofweek == dayofweek.monday ? "Mon" : dayofweek == dayofweek.tuesday ? "Tue" : dayofweek == dayofweek.wednesday ? "Wed" : dayofweek == dayofweek.thursday ? "Thu" : dayofweek == dayofweek.friday ? "Fri" : dayofweek == dayofweek.saturday ? "Sat" : dayofweek == dayofweek.sunday ? "Sun" : "N/A"
+
+// Draw horizontal line from previous day's close until 9:30 AM for RTH or 6:00 PM for NDOG/NWOG
+getTargetTime() =>
+	if gapTypeSelection == "RTH"
+		timestamp("America/New_York", year(time), month(time), dayofmonth(time), 9, 30)
+	else
+		timestamp("America/New_York", year(time), month(time), dayofmonth(time), 18, 0)
+
+targetTime = getTargetTime()
+// ***MODIFIED***: Only show the previous close line for RTH gaps.
+if (time < targetTime) and not na(prevDayClose) and showETHGap and (gapTypeSelection == "RTH")
+	if na(prevDayLine)
+		prevDayLine := line.new(prevDayTime, prevDayClose, targetTime, prevDayClose, xloc=xloc.bar_time, color=prevDayCloseLineColor, width=2, style=line.style_solid)
+		prevDayLabel := label.new(prevDayTime, prevDayClose, closeTimeDisplay + " Close: " + str.tostring(prevDayClose), xloc=xloc.bar_time, color=prevDayCloseLabelBgColor, textcolor=prevDayCloseLabelTextColor, style=label.style_label_center, size=size.small)
+	else
+		line.set_x2(prevDayLine, targetTime)
+else
+	if not na(prevDayLine)
+		line.delete(prevDayLine)
+		prevDayLine := na
+	if not na(prevDayLabel)
+		label.delete(prevDayLabel)
+		prevDayLabel := na
+
+// Reset first NWOG tracker on Monday
+if dayofweek == dayofweek.monday and dayofweek[1] != dayofweek.monday
+	isFirstNWOGofWeek := true
+
+// Function to determine if this is a New Week Opening Gap
+isNWOG() =>
+	// NWOG occurs from Friday 4:59pm to Monday 6:00pm
+	if gapTypeSelection == "NDOG/NWOG"
+		// Check if previous close was on Friday and current day is in weekend or Monday
+		fridayClose = prevDayDow == dayofweek.friday
+		weekendOrMonday = dayofweek >= dayofweek.friday or dayofweek == dayofweek.monday
+
+		// Calculate result
+		result = false
+		if fridayClose and weekendOrMonday and isFirstNWOGofWeek
+			result := true
+
+		result
+	else
+		false
+
+// Function for calculating the extension target time (3 PM)
+getRTHExtensionTime() =>
+	current_year = year(time)
+	current_month = month(time)
+	current_day = dayofmonth(time)
+	current_hour = hour(time, "America/New_York")
+
+	result = 0
+	// If the current time is past 3 PM, use the next day's 3 PM
+	if current_hour >= 15 // if it's 3 PM or later
+		// Add one day to get the next day's date
+		next_day_time = time + 86400000 // 86400000 ms = 1 day
+		result := timestamp("America/New_York", year(next_day_time), month(next_day_time), dayofmonth(next_day_time), 15, 0)
+	else
+		// Otherwise use today's 3 PM
+		result := timestamp("America/New_York", current_year, current_month, current_day, 15, 0)
+
+	result
+
+// Function to draw ETH Gap zone box with midpoint and price labels
+f_draw_eth_gap_zone(ethGapHigh, ethGapLow, ethGapStartIndex, ethGapEndIndex, boxTransparency, labelText, isRTH, isNWOG) =>
+	midpoint = (ethGapHigh + ethGapLow) / 2
+	foundNWOG = false
+	shortLabel = isRTH ? "RTH Gap" : isNWOG ? "NWOG" : "NDOG"
+
+	if not na(ethGapStartIndex) and not na(ethGapEndIndex)
+		// Use the appropriate color based on gap type
+		boxColor = isRTH ? boxColorRTH : boxColorNDOG
+
+		// Calculate the extension target time
+		extensionTime = getRTHExtensionTime()
+
+		// Create the box with the original size first
+		newBox = box.new(ethGapStartIndex, ethGapHigh, ethGapEndIndex, ethGapLow, bgcolor=color.new(boxColor, boxTransparency), border_color=boxColor)
+		array.push(gapBoxes, newBox)
+
+		// Determine the label for NDOG/NWOG
+		finalLabelText = labelText
+		if isNWOG
+			finalLabelText := "First NWOG of Week (" + str.tostring(year(time)) + "-" + str.tostring(month(time)) + "-" + str.tostring(dayofmonth(time)) + ")"
+			foundNWOG := true
+
+		// Add midline inside the box
+		midLine = line.new(ethGapStartIndex, midpoint, ethGapEndIndex, midpoint, color=gapMidlineColor, width=1, style=line.style_dashed)
+		array.push(gapMidlines, midLine)
+
+		// Add price labels on the right of the box
+		highLabel = label.new(ethGapEndIndex, ethGapHigh, shortLabel + " | High | " + str.tostring(ethGapHigh), color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_right, size=size.small)
+		midLabel = label.new(ethGapEndIndex, midpoint, shortLabel + " | Mid | " + str.tostring(midpoint), color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_right, size=size.small)
+		lowLabel = label.new(ethGapEndIndex, ethGapLow, shortLabel + " | Low | " + str.tostring(ethGapLow), color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_right, size=size.small)
+
+		array.push(gapPriceLabels, highLabel)
+		array.push(gapPriceLabels, midLabel)
+		array.push(gapPriceLabels, lowLabel)
+
+		// Create extension lines if enabled
+		if extendETHGapLines
+			// High line
+			highLine = line.new(time, ethGapHigh, extensionTime, ethGapHigh, xloc=xloc.bar_time, color=gapExtLineColor, width=2, style=line.style_solid)
+			array.push(gapExtLines, highLine)
+
+			// Low line
+			lowLine = line.new(time, ethGapLow, extensionTime, ethGapLow, xloc=xloc.bar_time, color=gapExtLineColor, width=2, style=line.style_solid)
+			array.push(gapExtLines, lowLine)
+
+			// Mid line
+			extMidLine = line.new(time, midpoint, extensionTime, midpoint, xloc=xloc.bar_time, color=gapExtLineColor, width=1, style=line.style_dashed)
+			array.push(gapExtLines, extMidLine)
+
+			// Calculate label positions using time (xloc.bar_time) instead of bar_index to avoid the 500-bar limit error.
+			midPointTime = time + (extensionTime - time) / 2
+
+			// Box center label, placed at the midpoint in time of the extension.
+			boxLabel = label.new(midPointTime, midpoint, day_of_week_text() + " - " + finalLabelText, xloc=xloc.bar_time, color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_center, size=size.normal)
+			array.push(gapMainLabels, boxLabel)
+
+			// Add price labels at the end of the extended lines (at extensionTime)
+			extHighLabel = label.new(extensionTime, ethGapHigh, shortLabel + " | High | " + str.tostring(ethGapHigh), xloc=xloc.bar_time, color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			extMidLabel = label.new(extensionTime, midpoint, shortLabel + " | Mid | " + str.tostring(midpoint), xloc=xloc.bar_time, color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			extLowLabel = label.new(extensionTime, ethGapLow, shortLabel + " | Low | " + str.tostring(ethGapLow), xloc=xloc.bar_time, color=gapPriceLabelBgColor, textcolor=gapPriceLabelTextColor, style=label.style_label_right, size=size.small)
+
+			array.push(gapExtPriceLabels, extHighLabel)
+			array.push(gapExtPriceLabels, extMidLabel)
+			array.push(gapExtPriceLabels, extLowLabel)
+
+			// Add a label in the middle of the extended line area for NWOG
+			if isNWOG
+				// The midPointTime is already calculated above.
+				// Create label at the exact horizontal middle with time-based coordinates
+				extLabel = label.new(midPointTime, midpoint, "NWOG: " + str.tostring(ethGapHigh) + " - " + str.tostring(ethGapLow), xloc=xloc.bar_time, color=nwogLabelBgColor, textcolor=nwogLabelTextColor, style=label.style_label_center, size=size.normal)
+				array.push(gapExtLabels, extLabel)
+
+	foundNWOG
+// Check if it's time to draw the gap
+isDrawTime = gapTypeSelection == "RTH" ? is_930 : is_6pm
+
+if isDrawTime and showETHGap and not na(prevDayClose)
+	ethGapHigh := math.max(prevDayClose, open)
+	ethGapLow := math.min(prevDayClose, open)
+	ethGapStartIndex := prevDayEndIndex
+	ethGapEndIndex := bar_index
+
+	// Check if this is a NWOG
+	nwogCondition = isNWOG()
+
+	// Determine label text based on gap type
+	gapLabel = ""
+	isRTH = gapTypeSelection == "RTH"
+
+	if isRTH
+		gapLabel := "RTH Gap (" + str.tostring(year(time)) + "-" + str.tostring(month(time)) + "-" + str.tostring(dayofmonth(time)) + ")"
+	else
+		// For NDOG/NWOG, basic label (function will enhance for NWOG)
+		gapLabel := "NDOG (" + str.tostring(year(time)) + "-" + str.tostring(month(time)) + "-" + str.tostring(dayofmonth(time)) + ")"
+
+	// Draw the gap zone and check if NWOG was found
+	nwogFound = f_draw_eth_gap_zone(ethGapHigh, ethGapLow, ethGapStartIndex, ethGapEndIndex, boxTransparency, gapLabel, isRTH, nwogCondition)
+
+	// Update the NWOG week tracking if needed
+	if nwogFound
+		isFirstNWOGofWeek := false
+
+	// Clean up preparation for next gap
+	if not na(prevDayLine)
+		line.delete(prevDayLine)
+		prevDayLine := na
+	if not na(prevDayLabel)
+		label.delete(prevDayLabel)
+		prevDayLabel := na
+	ethGapHigh := na
+	ethGapLow := na
+	ethGapStartIndex := na
+	ethGapEndIndex := na
+
+// ***CORRECTED LOOKBACK LOGIC***
+// This function now correctly enforces the lookback period for all Intraday Gap drawings.
+manage_gap_objects() =>
+	while array.size(gapBoxes) > globalLookbackPeriod
+		box.delete(array.shift(gapBoxes))
+	while array.size(gapMidlines) > globalLookbackPeriod
+		line.delete(array.shift(gapMidlines))
+	while array.size(gapMainLabels) > globalLookbackPeriod
+		label.delete(array.shift(gapMainLabels))
+	while array.size(gapExtLabels) > globalLookbackPeriod
+		label.delete(array.shift(gapExtLabels))
+
+	// Each gap has 3 price labels (high, mid, low)
+	while array.size(gapPriceLabels) > globalLookbackPeriod * 3
+		label.delete(array.shift(gapPriceLabels))
+	// Each gap has 3 extended lines
+	while array.size(gapExtLines) > globalLookbackPeriod * 3
+		line.delete(array.shift(gapExtLines))
+	// Each gap has 3 extended price labels
+	while array.size(gapExtPriceLabels) > globalLookbackPeriod * 3
+		label.delete(array.shift(gapExtPriceLabels))
+
+// Run cleanup function on each bar
+manage_gap_objects()
+
+// ===========================================================================================================================================================================================
+// =================================================================================== AM Market Maker Starter ====================================================================================
+//                                                                    FPI | 9:50am-10:10am macro | Ny Am Market Maker Starter
+// ===========================================================================================================================================================================================
+
+groupAMNY = "- - - - - - - - - - - - AM Market Maker Starter - - - - - - - - - - - - "
+
+// Set the effective setting based on master control for the entire section
+showAMNY = showAMNYMarketMaker
+
+// ============================================================================== NY AM Session FPI ================================================================================
+
+groupFPI = "- - - - - - - - - NY AM Session FPI - - - - - - - - - "
+
+// Define session times for FP imbalance (IMB) - with new constraints
+fpiStartHour = input.int(9, title="AM FPI Start Hour", minval=0, maxval=23, group=groupFPI)
+fpiStartMinute = input.int(30, title="AM FPI Start Minute", minval=0, maxval=59, group=groupFPI)
+fpiEndHour = input.int(11, title="AM FPI End Hour", minval=0, maxval=23, group=groupFPI)
+fpiEndMinute = input.int(59, title="AM FPI End Minute", minval=0, maxval=59, group=groupFPI)
+
+// Set the effective setting based on master control
+showFPI = showAMNY
+
+// New input for the dashed horizontal line in FP imbalance
+showFPI_Dashed = input.bool(true, title="Show AM FPI Midpoint", group=groupFPI)
+// New inputs for price labels
+showPriceLabels = input.bool(true, title="Show AM FPI Price Labels", group=groupFPI)
+priceLabelOffset = input.int(10, title="Price Label Offset (bars)", minval=5, maxval=50, group=groupFPI)
+priceLabelRightShift = input.int(4, title="Additional Price Label Right Shift", minval=0, maxval=100, group=groupFPI)
+// Add these input options to your groupFPI section
+showPriceLines = input.bool(true, title="Show AM FPI Price Lines", group=groupFPI)
+priceLinesExtend = input.bool(true, title="Extend Price Lines to 3PM", group=groupFPI)
+priceLineWidth = input.int(1, title="Extended Price Lines Width", minval=1, maxval=3, group=groupFPI)
+priceLineStyle = input.string("solid", title="Extended Price Lines Style", options=["solid", "dashed", "dotted"], group=groupFPI)
+
+// FPI Projection Settings
+showFPIProjection = input.bool(true, title="Show AM FPI Projection", group=groupFPI)
+
+// Lines, boxes and labels for FP imbalance
+var fpiboxes = array.new_box()
+var labels = array.new_label()
+var line[] imb_dashed_lines = array.new_line()
+var label[] imb_price_labels = array.new_label()
+var line[] imb_price_top_lines = array.new_line()
+var line[] imb_price_mid_lines = array.new_line()
+var line[] imb_price_bottom_lines = array.new_line()
+var box[] fpiProjectionBoxes = array.new_box()
+
+var box imb_box = na
+var bool first_imb_found = false
+var line imb_dashed_line = na
+var box fpiProjectionUpBox = na
+var box fpiProjectionDownBox = na
+var color boxColor = na
+
+// Function to convert line style string to integer
+get_line_style(style_str) =>
+	style_str == "dotted" ? line.style_dotted : style_str == "dashed" ? line.style_dashed : line.style_solid
+
+// Box creation for FP imbalance (IMB)
+make_box(_left, _right, _top, _bottom, col) =>
+	box.new(left=_left, right=_right, top=_top, bottom=_bottom, border_color=color.new(col, 70), bgcolor=col, text="AM FPI " + str.format("{0}:{1}-{2}:{3}", fpiStartHour, str.tostring(fpiStartMinute, "00"), fpiEndHour, str.tostring(fpiEndMinute, "00")) + " - " + day_of_week_text(), text_halign = text.align_center, text_size=size.normal, text_color = fpiBoxTextColor)
+
+// Box creation for FPI projection
+make_projection_box(_left, _right, _top, _bottom, col, direction) =>
+	projectionText = direction == "up" ? "AM FPI 4th Up" : "AM FPI 4th Down"
+	box.new(left=_left, right=_right, top=_top, bottom=_bottom, border_color=color.new(col, 70), bgcolor=col, text=projectionText, text_halign = text.align_center, text_size=size.small, text_color = fpiBoxTextColor)
+
+manage_projection_boxes(upBox, downBox) =>
+	if not na(upBox)
+		array.push(fpiProjectionBoxes, upBox)
+	if not na(downBox)
+		array.push(fpiProjectionBoxes, downBox)
+	while array.size(fpiProjectionBoxes) > globalLookbackPeriod * 2
+		box.delete(array.shift(fpiProjectionBoxes))
+
+manage_price_labels(top_label, bottom_label, mid_label) =>
+	array.push(imb_price_labels, top_label)
+	array.push(imb_price_labels, bottom_label)
+	array.push(imb_price_labels, mid_label)
+	while array.size(imb_price_labels) > globalLookbackPeriod * 3
+		label.delete(array.shift(imb_price_labels))
+
+manage_price_lines(top_line, mid_line, bottom_line) =>
+	array.push(imb_price_top_lines, top_line)
+	array.push(imb_price_mid_lines, mid_line)
+	array.push(imb_price_bottom_lines, bottom_line)
+	while array.size(imb_price_top_lines) > globalLookbackPeriod
+		line.delete(array.shift(imb_price_top_lines))
+	while array.size(imb_price_mid_lines) > globalLookbackPeriod
+		line.delete(array.shift(imb_price_mid_lines))
+	while array.size(imb_price_bottom_lines) > globalLookbackPeriod
+		line.delete(array.shift(imb_price_bottom_lines))
+
+manage_boxes(b) =>
+	array.push(fpiboxes, b)
+	while array.size(fpiboxes) > globalLookbackPeriod
+		box.delete(array.shift(fpiboxes))
+
+manage_dashed_lines(l) =>
+	array.push(imb_dashed_lines, l)
+	while array.size(imb_dashed_lines) > globalLookbackPeriod
+		line.delete(array.shift(imb_dashed_lines))
+
+update_box(b) =>
+	current_date = time
+	time_11am = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 11, 0, 0)
+	rightmost_time = math.max(time_11am, time + 20 * timeframe.in_seconds() * 1000)
+	rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+	rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+	box.set_right(b, rightmost_bar)
+	if showPriceLabels and array.size(imb_price_labels) >= 3
+		size = array.size(imb_price_labels)
+		rightmostLabelBar = rightmost_bar + priceLabelRightShift
+		label.set_x(array.get(imb_price_labels, size - 3), rightmostLabelBar)
+		label.set_x(array.get(imb_price_labels, size - 2), rightmostLabelBar)
+		label.set_x(array.get(imb_price_labels, size - 1), rightmostLabelBar)
+
+update_projection_boxes(upBox, downBox) =>
+	if not na(upBox) and not na(downBox)
+		current_date = time
+		time_11am = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 11, 0, 0)
+		rightmost_time = math.max(time_11am, time + 20 * timeframe.in_seconds() * 1000)
+		rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+		rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+		box.set_right(upBox, rightmost_bar)
+		box.set_right(downBox, rightmost_bar)
+
+update_price_lines() =>
+	if array.size(imb_price_top_lines) > 0 and array.size(imb_price_mid_lines) > 0 and array.size(imb_price_bottom_lines) > 0
+		current_date = time
+		time_3pm = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 15, 0, 0)
+		if time < time_3pm and priceLinesExtend
+			rightmost_time = time_3pm
+			rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+			rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+			size_top = array.size(imb_price_top_lines)
+			size_mid = array.size(imb_price_mid_lines)
+			size_bottom = array.size(imb_price_bottom_lines)
+			if size_top > 0
+				line.set_x2(array.get(imb_price_top_lines, size_top - 1), rightmost_bar)
+			if size_mid > 0
+				line.set_x2(array.get(imb_price_mid_lines, size_mid - 1), rightmost_bar)
+			if size_bottom > 0
+				line.set_x2(array.get(imb_price_bottom_lines, size_bottom - 1), rightmost_bar)
+
+update_dashed_line(l, mid_point) =>
+	current_date = time
+	time_11am = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 11, 0, 0)
+	rightmost_time = math.max(time_11am, time + 20 * timeframe.in_seconds() * 1000)
+	rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+	rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+	line.set_x2(l, rightmost_bar)
+	line.set_y2(l, mid_point)
+
+// New function to accurately check if any given timestamp is within the FPI session.
+isTimeInFpiSession(t) =>
+	_h = hour(t, timezone)
+	_m = minute(t, timezone)
+	inSession = if fpiStartHour < fpiEndHour
+		(_h > fpiStartHour or (_h == fpiStartHour and _m >= fpiStartMinute)) and (_h < fpiEndHour or (_h == fpiEndHour and _m <= fpiEndMinute))
+	else if fpiStartHour > fpiEndHour // Handles overnight sessions
+		(_h > fpiStartHour or (_h == fpiStartHour and _m >= fpiStartMinute)) or (_h < fpiEndHour or (_h == fpiEndHour and _m <= fpiEndMinute))
+	else // Handles sessions within the same hour
+		_h == fpiStartHour and _m >= fpiStartMinute and _m <= fpiEndMinute
+	inSession
+
+
+// ***FIXED***: The main detection logic now only checks if the MIDDLE candle of the pattern is inside the time window.
+if not first_imb_found and showFPI and isTimeInFpiSession(time[1])
+	imbUp = close[1] > open[1] and high[2] < low[0]
+	imbDown = close[1] < open[1] and low[2] > high[0]
+	if imbUp or imbDown
+		first_imb_found := true
+		boxColor := imbUp ? mmBullishImbColor : mmBearishImbColor
+		boxTop = imbUp ? low[0] : low[2] // Corrected FVG definition
+		boxBottom = imbUp ? high[2] : high[0] // Corrected FVG definition
+		midPoint = (boxTop + boxBottom) / 2
+		boxHeight = math.abs(boxTop - boxBottom)
+		labelBarIndex = bar_index + priceLabelOffset
+		imb_box := make_box(bar_index-2, labelBarIndex, boxTop, boxBottom, boxColor)
+		manage_boxes(imb_box)
+		if showFPIProjection
+			projectionUp4Top = boxTop + (boxHeight * 4)
+			projectionUp4Bottom = boxBottom + (boxHeight * 4)
+			projectionDown4Top = boxTop - (boxHeight * 4)
+			projectionDown4Bottom = boxBottom - (boxHeight * 4)
+			fpiProjectionUpBox := make_projection_box(bar_index-2, labelBarIndex, projectionUp4Top, projectionUp4Bottom, fpiProjectionColorUp, "up")
+			fpiProjectionDownBox := make_projection_box(bar_index-2, labelBarIndex, projectionDown4Top, projectionDown4Bottom, fpiProjectionColorDn, "down")
+			manage_projection_boxes(fpiProjectionUpBox, fpiProjectionDownBox)
+		if showPriceLabels
+			labelBarIndexWithShift = labelBarIndex + priceLabelRightShift
+			topPriceText = "AM FPI | High | " + str.tostring(boxTop, format.mintick)
+			bottomPriceText = "AM FPI | Low | " + str.tostring(boxBottom, format.mintick)
+			midPriceText = "AM FPI | Mid | " + str.tostring(midPoint, format.mintick)
+			topLabel = label.new(labelBarIndexWithShift, boxTop, topPriceText, color=fpiPriceLabelBgColor, textcolor=fpiPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			bottomLabel = label.new(labelBarIndexWithShift, boxBottom, bottomPriceText, color=fpiPriceLabelBgColor, textcolor=fpiPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			midLabel = label.new(labelBarIndexWithShift, midPoint, midPriceText, color=fpiPriceLabelBgColor, textcolor=fpiPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			manage_price_labels(topLabel, bottomLabel, midLabel)
+		if showPriceLines
+			lineStyle = get_line_style(priceLineStyle)
+			initialEndBar = labelBarIndex + priceLabelRightShift + 20
+			topLine = line.new(bar_index-2, boxTop, initialEndBar, boxTop, color=priceLineColor, width=priceLineWidth, style=lineStyle)
+			midLine = line.new(bar_index-2, midPoint, initialEndBar, midPoint, color=priceLineColor, width=priceLineWidth, style=lineStyle)
+			bottomLine = line.new(bar_index-2, boxBottom, initialEndBar, boxBottom, color=priceLineColor, width=priceLineWidth, style=lineStyle)
+			manage_price_lines(topLine, midLine, bottomLine)
+		if showFPI_Dashed
+			midPointFPI = (boxTop + boxBottom) / 2
+			imb_dashed_line := line.new(bar_index-2, midPointFPI, bar_index+15, midPointFPI, color=fpiDashedColor, style=line.style_dashed, width=1)
+			manage_dashed_lines(imb_dashed_line)
+
+// Reset logic updated to use the new, more accurate time-checking function.
+if (hour(time, timezone) == startTimeHour and minute(time, timezone) == 0) or (not isTimeInFpiSession(time) and isTimeInFpiSession(time[1]))
+	first_imb_found := false
+
+if first_imb_found and not na(imb_box) and showFPI
+	update_box(imb_box)
+	if showFPIProjection and not na(fpiProjectionUpBox) and not na(fpiProjectionDownBox)
+		update_projection_boxes(fpiProjectionUpBox, fpiProjectionDownBox)
+	if showFPI_Dashed and not na(imb_dashed_line)
+		midPointFPI = (box.get_top(imb_box) + box.get_bottom(imb_box)) / 2
+		update_dashed_line(imb_dashed_line, midPointFPI)
+
+if first_imb_found and showPriceLines and priceLinesExtend and showFPI
+	update_price_lines()
+
+// ============================================================================== NY PM Session FPI ================================================================================
+
+groupPMFPI = "- - - - - - - - - NY PM Session FPI - - - - - - - - - "
+
+// Define session times for PM FPI
+pm_fpiStartHour = input.int(12, title="PM FPI Start Hour", minval=0, maxval=23, group=groupPMFPI)
+pm_fpiStartMinute = input.int(0, title="PM FPI Start Minute", minval=0, maxval=59, group=groupPMFPI)
+pm_fpiEndHour = input.int(15, title="PM FPI End Hour", minval=0, maxval=23, group=groupPMFPI)
+pm_fpiEndMinute = input.int(0, title="PM FPI End Minute", minval=0, maxval=59, group=groupPMFPI)
+
+// Set the effective setting based on master control
+showPMFPI = showPMNYMarketMaker
+
+// Visual settings for PM FPI
+showPMFPI_Dashed = input.bool(true, title="Show PM FPI Midpoint", group=groupPMFPI)
+showPMPriceLabels = input.bool(true, title="Show PM FPI Price Labels", group=groupPMFPI)
+pm_priceLabelOffset = input.int(10, title="Price Label Offset (bars)", minval=5, maxval=50, group=groupPMFPI)
+pm_priceLabelRightShift = input.int(4, title="Additional Price Label Right Shift", minval=0, maxval=100, group=groupPMFPI)
+showPMPriceLines = input.bool(true, title="Show PM FPI Price Lines", group=groupPMFPI)
+pm_priceLinesExtend = input.bool(true, title="Extend Price Lines to 3PM", group=groupPMFPI)
+pm_priceLineWidth = input.int(1, title="Extended Price Lines Width", minval=1, maxval=3, group=groupPMFPI)
+pm_priceLineStyle = input.string("solid", title="Extended Price Lines Style", options=["solid", "dashed", "dotted"], group=groupPMFPI)
+showPMFPIProjection = input.bool(true, title="Show PM FPI Projection", group=groupPMFPI)
+
+// --- Drawing Object Arrays for PM FPI ---
+var box[] pm_fpiboxes = array.new_box()
+var line[] pm_imb_dashed_lines = array.new_line()
+var label[] pm_imb_price_labels = array.new_label()
+var line[] pm_imb_price_top_lines = array.new_line()
+var line[] pm_imb_price_mid_lines = array.new_line()
+var line[] pm_imb_price_bottom_lines = array.new_line()
+var box[] pm_fpiProjectionBoxes = array.new_box()
+
+// --- State Variables for PM FPI ---
+var box pm_imb_box = na
+var bool pm_first_imb_found = false
+var line pm_imb_dashed_line = na
+var box pm_fpiProjectionUpBox = na
+var box pm_fpiProjectionDownBox = na
+var color pm_boxColor = na
+
+// --- Helper Functions for PM FPI ---
+make_pm_box(_left, _right, _top, _bottom, col) =>
+	box.new(left=_left, right=_right, top=_top, bottom=_bottom, border_color=color.new(col, 70), bgcolor=col, text="PM FPI " + str.format("{0}:{1}-{2}:{3}", pm_fpiStartHour, str.tostring(pm_fpiStartMinute, "00"), pm_fpiEndHour, str.tostring(pm_fpiEndMinute, "00")) + " - " + day_of_week_text(), text_halign = text.align_center, text_size=size.normal, text_color = fpiBoxTextColor)
+
+make_pm_projection_box(_left, _right, _top, _bottom, col, direction) =>
+	projectionText = direction == "up" ? "PM FPI 4th Up" : "PM FPI 4th Down"
+	box.new(left=_left, right=_right, top=_top, bottom=_bottom, border_color=color.new(col, 70), bgcolor=col, text=projectionText, text_halign = text.align_center, text_size=size.small, text_color = fpiBoxTextColor)
+
+manage_pm_projection_boxes(upBox, downBox) =>
+	if not na(upBox)
+		array.push(pm_fpiProjectionBoxes, upBox)
+	if not na(downBox)
+		array.push(pm_fpiProjectionBoxes, downBox)
+	while array.size(pm_fpiProjectionBoxes) > globalLookbackPeriod * 2
+		box.delete(array.shift(pm_fpiProjectionBoxes))
+
+manage_pm_price_labels(top_label, bottom_label, mid_label) =>
+	array.push(pm_imb_price_labels, top_label)
+	array.push(pm_imb_price_labels, bottom_label)
+	array.push(pm_imb_price_labels, mid_label)
+	while array.size(pm_imb_price_labels) > globalLookbackPeriod * 3
+		label.delete(array.shift(pm_imb_price_labels))
+
+manage_pm_price_lines(top_line, mid_line, bottom_line) =>
+	array.push(pm_imb_price_top_lines, top_line)
+	array.push(pm_imb_price_mid_lines, mid_line)
+	array.push(pm_imb_price_bottom_lines, bottom_line)
+	while array.size(pm_imb_price_top_lines) > globalLookbackPeriod
+		line.delete(array.shift(pm_imb_price_top_lines))
+	while array.size(pm_imb_price_mid_lines) > globalLookbackPeriod
+		line.delete(array.shift(pm_imb_price_mid_lines))
+	while array.size(pm_imb_price_bottom_lines) > globalLookbackPeriod
+		line.delete(array.shift(pm_imb_price_bottom_lines))
+
+manage_pm_boxes(b) =>
+	array.push(pm_fpiboxes, b)
+	while array.size(pm_fpiboxes) > globalLookbackPeriod
+		box.delete(array.shift(pm_fpiboxes))
+
+manage_pm_dashed_lines(l) =>
+	array.push(pm_imb_dashed_lines, l)
+	while array.size(pm_imb_dashed_lines) > globalLookbackPeriod
+		line.delete(array.shift(pm_imb_dashed_lines))
+
+update_pm_box(b) =>
+    current_date = time
+    time_3pm = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 15, 0, 0)
+    rightmost_time = math.max(time_3pm, time + 20 * timeframe.in_seconds() * 1000)
+    rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+    rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+    box.set_right(b, rightmost_bar)
+    if showPMPriceLabels and array.size(pm_imb_price_labels) >= 3
+        size = array.size(pm_imb_price_labels)
+        rightmostLabelBar = rightmost_bar + pm_priceLabelRightShift
+        label.set_x(array.get(pm_imb_price_labels, size - 3), rightmostLabelBar)
+        label.set_x(array.get(pm_imb_price_labels, size - 2), rightmostLabelBar)
+        label.set_x(array.get(pm_imb_price_labels, size - 1), rightmostLabelBar)
+
+update_pm_projection_boxes(upBox, downBox) =>
+    if not na(upBox) and not na(downBox)
+        current_date = time
+        time_3pm = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 15, 0, 0)
+        rightmost_time = math.max(time_3pm, time + 20 * timeframe.in_seconds() * 1000)
+        rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+        rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+        box.set_right(upBox, rightmost_bar)
+        box.set_right(downBox, rightmost_bar)
+
+update_pm_price_lines() =>
+    if array.size(pm_imb_price_top_lines) > 0 and array.size(pm_imb_price_mid_lines) > 0 and array.size(pm_imb_price_bottom_lines) > 0
+        current_date = time
+        time_3pm = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 15, 0, 0)
+        if time < time_3pm and pm_priceLinesExtend
+            rightmost_time = time_3pm
+            rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+            rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+            size_top = array.size(pm_imb_price_top_lines)
+            size_mid = array.size(pm_imb_price_mid_lines)
+            size_bottom = array.size(pm_imb_price_bottom_lines)
+            if size_top > 0
+                line.set_x2(array.get(pm_imb_price_top_lines, size_top - 1), rightmost_bar)
+            if size_mid > 0
+                line.set_x2(array.get(pm_imb_price_mid_lines, size_mid - 1), rightmost_bar)
+            if size_bottom > 0
+                line.set_x2(array.get(pm_imb_price_bottom_lines, size_bottom - 1), rightmost_bar)
+
+update_pm_dashed_line(l, mid_point) =>
+    current_date = time
+    time_3pm = timestamp(timezone, year(current_date), month(current_date), dayofmonth(current_date), 15, 0, 0)
+    rightmost_time = math.max(time_3pm, time + 20 * timeframe.in_seconds() * 1000)
+    rightmost_bar = bar_index + math.round((rightmost_time - time) / (timeframe.in_seconds() * 1000))
+    rightmost_bar := math.min(rightmost_bar, bar_index + 500)
+    line.set_x2(l, rightmost_bar)
+    line.set_y2(l, mid_point)
+
+isTimeInPmFpiSession(t) =>
+	_h = hour(t, timezone)
+	_m = minute(t, timezone)
+	inSession = if pm_fpiStartHour < pm_fpiEndHour
+		(_h > pm_fpiStartHour or (_h == pm_fpiStartHour and _m >= pm_fpiStartMinute)) and (_h < pm_fpiEndHour or (_h == pm_fpiEndHour and _m <= pm_fpiEndMinute))
+	else if pm_fpiStartHour > pm_fpiEndHour // Handles overnight sessions
+		(_h > pm_fpiStartHour or (_h == pm_fpiStartHour and _m >= pm_fpiStartMinute)) or (_h < pm_fpiEndHour or (_h == pm_fpiEndHour and _m <= pm_fpiEndMinute))
+	else // Handles sessions within the same hour
+		_h == pm_fpiStartHour and _m >= pm_fpiStartMinute and _m <= pm_fpiEndMinute
+	inSession
+
+// --- Main Logic for PM FPI ---
+if not pm_first_imb_found and showPMFPI and isTimeInPmFpiSession(time[1])
+	imbUp = close[1] > open[1] and high[2] < low[0]
+	imbDown = close[1] < open[1] and low[2] > high[0]
+	if imbUp or imbDown
+		pm_first_imb_found := true
+		pm_boxColor := imbUp ? mmBullishImbColor : mmBearishImbColor
+		boxTop = imbUp ? low[0] : low[2]
+		boxBottom = imbUp ? high[2] : high[0]
+		midPoint = (boxTop + boxBottom) / 2
+		boxHeight = math.abs(boxTop - boxBottom)
+		labelBarIndex = bar_index + pm_priceLabelOffset
+		pm_imb_box := make_pm_box(bar_index-2, labelBarIndex, boxTop, boxBottom, pm_boxColor)
+		manage_pm_boxes(pm_imb_box)
+		if showPMFPIProjection
+			projectionUp4Top = boxTop + (boxHeight * 4)
+			projectionUp4Bottom = boxBottom + (boxHeight * 4)
+			projectionDown4Top = boxTop - (boxHeight * 4)
+			projectionDown4Bottom = boxBottom - (boxHeight * 4)
+			pm_fpiProjectionUpBox := make_pm_projection_box(bar_index-2, labelBarIndex, projectionUp4Top, projectionUp4Bottom, fpiProjectionColorUp, "up")
+			pm_fpiProjectionDownBox := make_pm_projection_box(bar_index-2, labelBarIndex, projectionDown4Top, projectionDown4Bottom, fpiProjectionColorDn, "down")
+			manage_pm_projection_boxes(pm_fpiProjectionUpBox, pm_fpiProjectionDownBox)
+		if showPMPriceLabels
+			labelBarIndexWithShift = labelBarIndex + pm_priceLabelRightShift
+			topPriceText = "PM FPI | High | " + str.tostring(boxTop, format.mintick)
+			bottomPriceText = "PM FPI | Low | " + str.tostring(boxBottom, format.mintick)
+			midPriceText = "PM FPI | Mid | " + str.tostring(midPoint, format.mintick)
+			topLabel = label.new(labelBarIndexWithShift, boxTop, topPriceText, color=fpiPriceLabelBgColor, textcolor=fpiPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			bottomLabel = label.new(labelBarIndexWithShift, boxBottom, bottomPriceText, color=fpiPriceLabelBgColor, textcolor=fpiPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			midLabel = label.new(labelBarIndexWithShift, midPoint, midPriceText, color=fpiPriceLabelBgColor, textcolor=fpiPriceLabelTextColor, style=label.style_label_right, size=size.small)
+			manage_pm_price_labels(topLabel, bottomLabel, midLabel)
+		if showPMPriceLines
+			lineStyle = get_line_style(pm_priceLineStyle)
+			initialEndBar = labelBarIndex + pm_priceLabelRightShift + 20
+			topLine = line.new(bar_index-2, boxTop, initialEndBar, boxTop, color=priceLineColor, width=pm_priceLineWidth, style=lineStyle)
+			midLine = line.new(bar_index-2, midPoint, initialEndBar, midPoint, color=priceLineColor, width=pm_priceLineWidth, style=lineStyle)
+			bottomLine = line.new(bar_index-2, boxBottom, initialEndBar, boxBottom, color=priceLineColor, width=pm_priceLineWidth, style=lineStyle)
+			manage_pm_price_lines(topLine, midLine, bottomLine)
+		if showPMFPI_Dashed
+			midPointFPI = (boxTop + boxBottom) / 2
+			pm_imb_dashed_line := line.new(bar_index-2, midPointFPI, bar_index+15, midPointFPI, color=fpiDashedColor, style=line.style_dashed, width=1)
+			manage_pm_dashed_lines(pm_imb_dashed_line)
+
+// Reset logic for PM FPI
+if (hour(time, timezone) == startTimeHour and minute(time, timezone) == 0) or (not isTimeInPmFpiSession(time) and isTimeInPmFpiSession(time[1]))
+	pm_first_imb_found := false
+
+if pm_first_imb_found and not na(pm_imb_box) and showPMFPI
+	update_pm_box(pm_imb_box)
+	if showPMFPIProjection and not na(pm_fpiProjectionUpBox) and not na(pm_fpiProjectionDownBox)
+		update_pm_projection_boxes(pm_fpiProjectionUpBox, pm_fpiProjectionDownBox)
+	if showPMFPI_Dashed and not na(pm_imb_dashed_line)
+		midPointFPI = (box.get_top(pm_imb_box) + box.get_bottom(pm_imb_box)) / 2
+		update_pm_dashed_line(pm_imb_dashed_line, midPointFPI)
+
+if pm_first_imb_found and showPMPriceLines and pm_priceLinesExtend and showPMFPI
+	update_pm_price_lines()
+
+
+// ============================================================================== Market Maker Starter =====================================================================================
+
+groupMarketMaker = "- - - - - - - - - AM Market Maker Starter - - - - - - - - - "
+
+expectedBias = input.string("Bullish", "Expected AM Bias", options=["Bearish", "Bullish"], group=groupMarketMaker)
+// Visual settings for highlighted imbalances
+showMMLabels = input.bool(true, "Show AM Market Maker Labels", group=groupMarketMaker)
+mmLabelSize = input.string("normal", "AM Label Size", options=["tiny", "small", "normal", "large", "huge"], group=groupMarketMaker)
+extendMMLines = input.bool(true, "Extend AM Lines to 3PM", group=groupMarketMaker)
+mmImbLineWidth = input.int(2, "AM Imbalance Line Width", minval=1, maxval=5, group=groupMarketMaker)
+mmImbLineStyle = input.string("solid", "AM Imbalance Line Style", options=["solid", "dashed", "dotted"], group=groupMarketMaker)
+
+// --- Drawing Object Arrays ---
+var box[] mmImbalances = array.new_box()
+var line[] mmHighLines = array.new_line()
+var line[] mmLowLines = array.new_line()
+var line[] mmMidLines = array.new_line()
+var label[] mmLabels = array.new_label()
+
+// --- Data Structures and State Variables ---
+type ImbalanceData
+	float top
+	float bottom
+	int startBar
+	bool isBullish
+	int startTime
+
+var ImbalanceData[] postFPIImbalances = array.new<ImbalanceData>()
+var bool fpiSessionActive = false
+
+var ImbalanceData highestBearishImb = ImbalanceData.new(na, na, na, false, na)
+var ImbalanceData lowestBearishImb = ImbalanceData.new(na, na, na, false, na)
+var ImbalanceData highestBullishImb = ImbalanceData.new(na, na, na, true, na)
+var ImbalanceData lowestBullishImb = ImbalanceData.new(na, na, na, true, na)
+
+// --- Helper Functions ---
+getMMLineStyle(styleStr) => styleStr == "dotted" ? line.style_dotted : styleStr == "dashed" ? line.style_dashed : line.style_solid
+getMMLabelSize(sizeStr) => sizeStr == "tiny" ? size.tiny : sizeStr == "small" ? size.small : sizeStr == "large" ? size.large : sizeStr == "huge" ? size.huge : size.normal
+
+getMMExtensionTime() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	targetHour = startTimeHour
+	targetMinute = 0
+	todayTarget = timestamp(timezone, currentYear, currentMonth, currentDay, targetHour, targetMinute)
+	result = todayTarget
+	if time >= todayTarget
+		nextDay = time + 86400000
+		result := timestamp(timezone, year(nextDay), month(nextDay), dayofmonth(nextDay), targetHour, targetMinute)
+	result
+
+// This function now safely clears all drawing objects using while loops.
+clear_all_mm_drawings() =>
+	while array.size(mmImbalances) > 0
+		box.delete(array.pop(mmImbalances))
+	while array.size(mmHighLines) > 0
+		line.delete(array.pop(mmHighLines))
+	while array.size(mmLowLines) > 0
+		line.delete(array.pop(mmLowLines))
+	while array.size(mmMidLines) > 0
+		line.delete(array.pop(mmMidLines))
+	while array.size(mmLabels) > 0
+		label.delete(array.pop(mmLabels))
+
+// Function to find the most extreme imbalances from the session's list
+findExtremeImbalances() =>
+	if array.size(postFPIImbalances) > 0
+		// Reset trackers before re-evaluating
+		highestBearishImb.top := na, lowestBearishImb.top := na
+		highestBullishImb.top := na, lowestBullishImb.top := na
+
+		for i = 0 to array.size(postFPIImbalances) - 1
+			imb = array.get(postFPIImbalances, i)
+			if imb.isBullish
+				if na(highestBullishImb.top) or imb.top > highestBullishImb.top
+					highestBullishImb.top := imb.top
+					highestBullishImb.bottom := imb.bottom
+					highestBullishImb.startBar := imb.startBar
+					highestBullishImb.startTime := imb.startTime
+				if na(lowestBullishImb.top) or imb.bottom < lowestBullishImb.bottom
+					lowestBullishImb.top := imb.top
+					lowestBullishImb.bottom := imb.bottom
+					lowestBullishImb.startBar := imb.startBar
+					lowestBullishImb.startTime := imb.startTime
+			else // Is Bearish
+				if na(highestBearishImb.top) or imb.top > highestBearishImb.top
+					highestBearishImb.top := imb.top
+					highestBearishImb.bottom := imb.bottom
+					highestBearishImb.startBar := imb.startBar
+					highestBearishImb.startTime := imb.startTime
+				if na(lowestBearishImb.top) or imb.bottom < lowestBearishImb.bottom
+					lowestBearishImb.top := imb.top
+					lowestBearishImb.bottom := imb.bottom
+					lowestBearishImb.startBar := imb.startBar
+					lowestBearishImb.startTime := imb.startTime
+
+// Function to draw a single highlighted imbalance
+highlightImbalance(imb, labelText, boxColor) =>
+	if not na(imb.top)
+		// Box drawing uses bar_index and is fine
+		mmBox = box.new(imb.startBar, imb.top, bar_index + 1, imb.bottom, border_color=mmImbLineColor, bgcolor=boxColor)
+		array.push(mmImbalances, mmBox)
+
+		if extendMMLines
+			extensionTime = getMMExtensionTime()
+			lineStyle = getMMLineStyle(mmImbLineStyle)
+			midPoint = (imb.top + imb.bottom) / 2
+
+			// Switched to xloc.bar_time and used time coordinates for drawing lines.
+			highLine = line.new(imb.startTime, imb.top, extensionTime, imb.top, xloc = xloc.bar_time, color=mmImbLineColor, width=mmImbLineWidth, style=lineStyle)
+			array.push(mmHighLines, highLine)
+			lowLine = line.new(imb.startTime, imb.bottom, extensionTime, imb.bottom, xloc = xloc.bar_time, color=mmImbLineColor, width=mmImbLineWidth, style=lineStyle)
+			array.push(mmLowLines, lowLine)
+			midLine = line.new(imb.startTime, midPoint, extensionTime, midPoint, xloc = xloc.bar_time, color=mmImbLineColor, width=mmImbLineWidth, style=line.style_dashed)
+			array.push(mmMidLines, midLine)
+
+		if showMMLabels
+			// Label drawing uses bar_index and is fine
+			labelSize = getMMLabelSize(mmLabelSize)
+			midPointLabel = (imb.top + imb.bottom) / 2
+			mmLabel = label.new(bar_index, midPointLabel, labelText, style=label.style_label_left, color=color.new(boxColor, 90), textcolor=mmLabelTextColor, size=labelSize)
+			array.push(mmLabels, mmLabel)
+
+// Function to draw the relevant imbalances based on bias
+highlightMarketMakerImbalances() =>
+	if expectedBias == "Bearish"
+		highlightImbalance(highestBearishImb, "Highest Bearish Imb (Bearish Bias)", mmBearishImbColor)
+		highlightImbalance(highestBullishImb, "Highest Bullish Imb (Bearish Bias)", mmBullishImbColor)
+	else if expectedBias == "Bullish"
+		highlightImbalance(lowestBearishImb, "Lowest Bearish Imb (Bullish Bias)", mmBearishImbColor)
+		highlightImbalance(lowestBullishImb, "Lowest Bullish Imb (Bullish Bias)", mmBullishImbColor)
+
+// --- Main Execution Logic ---
+if showAMNY
+	// Session Start: Clear drawings from the previous session and reset trackers
+	if isTimeInFpiSession(time) and not fpiSessionActive
+		fpiSessionActive := true
+		clear_all_mm_drawings()
+		array.clear(postFPIImbalances)
+		highestBearishImb.top := na, lowestBearishImb.top := na
+		highestBullishImb.top := na, lowestBullishImb.top := na
+
+	// During Session: Detect, re-evaluate, and redraw in real-time
+	if fpiSessionActive and isTimeInFpiSession(time)
+		imbUp = close[1] > open[1] and high[2] < low[0]
+		imbDown = close[1] < open[1] and low[2] > high[0]
+
+		// If a new imbalance is found, update the list and redraw everything
+		if imbUp or imbDown
+			imbStartTime = time[2]
+			array.push(postFPIImbalances, ImbalanceData.new(imbUp ? low[0] : low[2], imbUp ? high[2] : high[0], bar_index - 2, imbUp, imbStartTime))
+			clear_all_mm_drawings()
+			findExtremeImbalances()
+			highlightMarketMakerImbalances()
+
+	// Session End
+	if fpiSessionActive and not isTimeInFpiSession(time)
+		fpiSessionActive := false
+
+// ***FIXED***: Daily Reset at 3pm now only resets the data trackers, leaving the drawings on the chart.
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and hour(time[1], timezone) != startTimeHour
+	array.clear(postFPIImbalances)
+	fpiSessionActive := false
+	highestBearishImb.top := na
+	lowestBearishImb.top := na
+	highestBullishImb.top := na
+	lowestBullishImb.top := na
+
+// Manage historical drawings to respect the lookback period
+manage_mm_objects() =>
+	while array.size(mmImbalances) > globalLookbackPeriod * 2
+		box.delete(array.shift(mmImbalances))
+	while array.size(mmHighLines) > globalLookbackPeriod * 2
+		line.delete(array.shift(mmHighLines))
+	while array.size(mmLowLines) > globalLookbackPeriod * 2
+		line.delete(array.shift(mmLowLines))
+	while array.size(mmMidLines) > globalLookbackPeriod * 2
+		line.delete(array.shift(mmMidLines))
+	while array.size(mmLabels) > globalLookbackPeriod * 2
+		label.delete(array.shift(mmLabels))
+
+manage_mm_objects()
+
+
+// ============================================================================== PM Market Maker Starter =====================================================================================
+
+groupPMMarketMaker = "- - - - - - - - - PM Market Maker Starter - - - - - - - - - "
+
+pm_expectedBias = input.string("Bullish", "Expected PM Bias", options=["Bearish", "Bullish"], group=groupPMMarketMaker)
+// Visual settings for highlighted imbalances
+pm_showMMLabels = input.bool(true, "Show PM Market Maker Labels", group=groupPMMarketMaker)
+pm_mmLabelSize = input.string("normal", "PM Label Size", options=["tiny", "small", "normal", "large", "huge"], group=groupPMMarketMaker)
+pm_extendMMLines = input.bool(true, "Extend PM Lines to 3PM", group=groupPMMarketMaker)
+pm_mmImbLineWidth = input.int(2, "PM Imbalance Line Width", minval=1, maxval=5, group=groupPMMarketMaker)
+pm_mmImbLineStyle = input.string("solid", "PM Imbalance Line Style", options=["solid", "dashed", "dotted"], group=groupPMMarketMaker)
+
+// --- Drawing Object Arrays ---
+var box[] pm_mmImbalances = array.new_box()
+var line[] pm_mmHighLines = array.new_line()
+var line[] pm_mmLowLines = array.new_line()
+var line[] pm_mmMidLines = array.new_line()
+var label[] pm_mmLabels = array.new_label()
+
+// --- Data Structures and State Variables ---
+var ImbalanceData[] pm_postFPIImbalances = array.new<ImbalanceData>()
+var bool pm_fpiSessionActive = false
+
+var ImbalanceData pm_highestBearishImb = ImbalanceData.new(na, na, na, false, na)
+var ImbalanceData pm_lowestBearishImb = ImbalanceData.new(na, na, na, false, na)
+var ImbalanceData pm_highestBullishImb = ImbalanceData.new(na, na, na, true, na)
+var ImbalanceData pm_lowestBullishImb = ImbalanceData.new(na, na, na, true, na)
+
+// --- Helper Functions ---
+getPM_MMLineStyle(styleStr) => styleStr == "dotted" ? line.style_dotted : styleStr == "dashed" ? line.style_dashed : line.style_solid
+getPM_MMLabelSize(sizeStr) => sizeStr == "tiny" ? size.tiny : sizeStr == "small" ? size.small : sizeStr == "large" ? size.large : sizeStr == "huge" ? size.huge : size.normal
+
+getPM_MMExtensionTime() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	targetHour = 15 // 3 PM
+	targetMinute = 0
+	todayTarget = timestamp(timezone, currentYear, currentMonth, currentDay, targetHour, targetMinute)
+	result = todayTarget
+	if time >= todayTarget
+		nextDay = time + 86400000
+		result := timestamp(timezone, year(nextDay), month(nextDay), dayofmonth(nextDay), targetHour, targetMinute)
+	result
+
+clear_all_pm_mm_drawings() =>
+	while array.size(pm_mmImbalances) > 0
+		box.delete(array.pop(pm_mmImbalances))
+	while array.size(pm_mmHighLines) > 0
+		line.delete(array.pop(pm_mmHighLines))
+	while array.size(pm_mmLowLines) > 0
+		line.delete(array.pop(pm_mmLowLines))
+	while array.size(pm_mmMidLines) > 0
+		line.delete(array.pop(pm_mmMidLines))
+	while array.size(pm_mmLabels) > 0
+		label.delete(array.pop(pm_mmLabels))
+
+find_pm_ExtremeImbalances() =>
+	if array.size(pm_postFPIImbalances) > 0
+		pm_highestBearishImb.top := na, pm_lowestBearishImb.top := na
+		pm_highestBullishImb.top := na, pm_lowestBullishImb.top := na
+
+		for i = 0 to array.size(pm_postFPIImbalances) - 1
+			imb = array.get(pm_postFPIImbalances, i)
+			if imb.isBullish
+				if na(pm_highestBullishImb.top) or imb.top > pm_highestBullishImb.top
+					pm_highestBullishImb.top := imb.top, pm_highestBullishImb.bottom := imb.bottom, pm_highestBullishImb.startBar := imb.startBar, pm_highestBullishImb.startTime := imb.startTime
+				if na(pm_lowestBullishImb.top) or imb.bottom < pm_lowestBullishImb.bottom
+					pm_lowestBullishImb.top := imb.top, pm_lowestBullishImb.bottom := imb.bottom, pm_lowestBullishImb.startBar := imb.startBar, pm_lowestBullishImb.startTime := imb.startTime
+			else // Is Bearish
+				if na(pm_highestBearishImb.top) or imb.top > pm_highestBearishImb.top
+					pm_highestBearishImb.top := imb.top, pm_highestBearishImb.bottom := imb.bottom, pm_highestBearishImb.startBar := imb.startBar, pm_highestBearishImb.startTime := imb.startTime
+				if na(pm_lowestBearishImb.top) or imb.bottom < pm_lowestBearishImb.bottom
+					pm_lowestBearishImb.top := imb.top, pm_lowestBearishImb.bottom := imb.bottom, pm_lowestBearishImb.startBar := imb.startBar, pm_lowestBearishImb.startTime := imb.startTime
+
+highlight_pm_Imbalance(imb, labelText, boxColor) =>
+	if not na(imb.top)
+		mmBox = box.new(imb.startBar, imb.top, bar_index + 1, imb.bottom, border_color=mmImbLineColor, bgcolor=boxColor)
+		array.push(pm_mmImbalances, mmBox)
+
+		if pm_extendMMLines
+			extensionTime = getPM_MMExtensionTime()
+			lineStyle = getPM_MMLineStyle(pm_mmImbLineStyle)
+			midPoint = (imb.top + imb.bottom) / 2
+
+			highLine = line.new(imb.startTime, imb.top, extensionTime, imb.top, xloc = xloc.bar_time, color=mmImbLineColor, width=pm_mmImbLineWidth, style=lineStyle)
+			array.push(pm_mmHighLines, highLine)
+			lowLine = line.new(imb.startTime, imb.bottom, extensionTime, imb.bottom, xloc = xloc.bar_time, color=mmImbLineColor, width=pm_mmImbLineWidth, style=lineStyle)
+			array.push(pm_mmLowLines, lowLine)
+			midLine = line.new(imb.startTime, midPoint, extensionTime, midPoint, xloc = xloc.bar_time, color=mmImbLineColor, width=pm_mmImbLineWidth, style=line.style_dashed)
+			array.push(pm_mmMidLines, midLine)
+
+		if pm_showMMLabels
+			labelSize = getPM_MMLabelSize(pm_mmLabelSize)
+			midPointLabel = (imb.top + imb.bottom) / 2
+			mmLabel = label.new(bar_index, midPointLabel, labelText, style=label.style_label_left, color=color.new(boxColor, 90), textcolor=mmLabelTextColor, size=labelSize)
+			array.push(pm_mmLabels, mmLabel)
+
+highlight_pm_MarketMakerImbalances() =>
+	if pm_expectedBias == "Bearish"
+		highlight_pm_Imbalance(pm_highestBearishImb, "Highest Bearish Imb (PM Bias)", mmBearishImbColor)
+		highlight_pm_Imbalance(pm_highestBullishImb, "Highest Bullish Imb (PM Bias)", mmBullishImbColor)
+	else if pm_expectedBias == "Bullish"
+		highlight_pm_Imbalance(pm_lowestBearishImb, "Lowest Bearish Imb (PM Bias)", mmBearishImbColor)
+		highlight_pm_Imbalance(pm_lowestBullishImb, "Lowest Bullish Imb (PM Bias)", mmBullishImbColor)
+
+// --- Main Execution Logic ---
+if showPMNYMarketMaker
+	// Session Start
+	if isTimeInPmFpiSession(time) and not pm_fpiSessionActive
+		pm_fpiSessionActive := true
+		clear_all_pm_mm_drawings()
+		array.clear(pm_postFPIImbalances)
+		pm_highestBearishImb.top := na, pm_lowestBearishImb.top := na
+		pm_highestBullishImb.top := na, pm_lowestBullishImb.top := na
+
+	// During Session
+	if pm_fpiSessionActive and isTimeInPmFpiSession(time)
+		imbUp = close[1] > open[1] and high[2] < low[0]
+		imbDown = close[1] < open[1] and low[2] > high[0]
+
+		if imbUp or imbDown
+			imbStartTime = time[2]
+			array.push(pm_postFPIImbalances, ImbalanceData.new(imbUp ? low[0] : low[2], imbUp ? high[2] : high[0], bar_index - 2, imbUp, imbStartTime))
+			clear_all_pm_mm_drawings()
+			find_pm_ExtremeImbalances()
+			highlight_pm_MarketMakerImbalances()
+
+	// Session End
+	if pm_fpiSessionActive and not isTimeInPmFpiSession(time)
+		pm_fpiSessionActive := false
+
+// Daily Reset
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and hour(time[1], timezone) != startTimeHour
+	array.clear(pm_postFPIImbalances)
+	pm_fpiSessionActive := false
+	pm_highestBearishImb.top := na
+	pm_lowestBearishImb.top := na
+	pm_highestBullishImb.top := na
+	pm_lowestBullishImb.top := na
+
+// Manage historical drawings
+manage_pm_mm_objects() =>
+	while array.size(pm_mmImbalances) > globalLookbackPeriod * 2
+		box.delete(array.shift(pm_mmImbalances))
+	while array.size(pm_mmHighLines) > globalLookbackPeriod * 2
+		line.delete(array.shift(pm_mmHighLines))
+	while array.size(pm_mmLowLines) > globalLookbackPeriod * 2
+		line.delete(array.shift(pm_mmLowLines))
+	while array.size(pm_mmMidLines) > globalLookbackPeriod * 2
+		line.delete(array.shift(pm_mmMidLines))
+	while array.size(pm_mmLabels) > globalLookbackPeriod * 2
+		label.delete(array.shift(pm_mmLabels))
+
+manage_pm_mm_objects()
+
+
+// ============================================================================== 9:50am - 10:10am Macro ===================================================================================
+
+// Inputs for the Macro Window
+groupCMacro = "- - - - - - - - - -  9:50am - 10:10am Macro  - - - - - - - - - - - "
+CM_showMacroBox = showAMNY
+CM_extendMacroLines = input.bool(true, "Extend Macro Lines to 3:00 PM", group=groupCMacro)
+CM_macroTextSize = input.string("normal", "Macro Label Text Size", options=["tiny", "small", "normal", "large", "huge"], group=groupCMacro)
+CM_macroLineStyle = input.string("solid", "Macro Line Style", options=["solid", "dashed", "dotted"], group=groupCMacro)
+
+// Inputs for the First Macro Imbalance (FPI)
+groupCImb = "- - - -   9:50am Macro First Imbalance Settings   - - - - - "
+CM_showImbalance = input.bool(true, "Show First Macro Imbalance", group=groupCImb)
+CM_extendImbalanceLines = input.bool(true, "Extend Imbalance Lines to 3:00 PM", group=groupCImb)
+CM_imbLineStyle = input.string("solid", "Imbalance Line Style", options=["solid", "dashed", "dotted"], group=groupCImb)
+CM_imbTextSize = input.string("normal", "Imbalance Label Text Size", options=["tiny", "small", "normal", "large", "huge"], group=groupCImb)
+
+// --- Constants & Time Settings ---
+CM_macroHour = 9
+CM_macroStartMinute = 50
+CM_macroEndMinute = 10
+
+// --- Drawing Object Arrays ---
+var box[] CM_macroBoxes = array.new_box()
+var line[] CM_macroHighLines = array.new_line()
+var line[] CM_macroLowLines = array.new_line()
+var line[] CM_macroMidLines = array.new_line()
+var label[] CM_macroLabels = array.new_label()
+var label[] CM_macroPriceLabels = array.new_label()
+// FPI Drawing Object Arrays
+var box[] CM_imbBoxes = array.new_box()
+var line[] CM_imbHighLines = array.new_line()
+var line[] CM_imbLowLines = array.new_line()
+var line[] CM_imbMidLines = array.new_line()
+var label[] CM_imbLabels = array.new_label()
+var label[] CM_imbPriceLabels = array.new_label()
+
+// --- State Variables ---
+// Macro
+var float CM_winHigh = na
+var float CM_winLow = na
+var int CM_winStart = na
+var int CM_winEnd = na
+var bool CM_winDrawn = false
+// FPI
+var bool CM_imbFound = false
+var float CM_imbHigh = na
+var float CM_imbLow = na
+var int CM_imbStart = na
+
+// --- Functions ---
+getCustomMacroTimes() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	endHour = CM_macroEndMinute < CM_macroStartMinute ? CM_macroHour + 1 : CM_macroHour
+	startTime = timestamp(timezone, currentYear, currentMonth, currentDay, CM_macroHour, CM_macroStartMinute)
+	endTime = timestamp(timezone, currentYear, currentMonth, currentDay, endHour, CM_macroEndMinute)
+	[startTime, endTime]
+
+// ***FIXED***: New function to check if a specific time 't' is within the macro window.
+isTimeInMacroWindow(t) =>
+	_year = year(t, timezone)
+	_month = month(t, timezone)
+	_day = dayofmonth(t, timezone)
+	_endHour = CM_macroEndMinute < CM_macroStartMinute ? CM_macroHour + 1 : CM_macroHour
+	_startTime = timestamp(timezone, _year, _month, _day, CM_macroHour, CM_macroStartMinute)
+	_endTime = timestamp(timezone, _year, _month, _day, _endHour, CM_macroEndMinute)
+	t >= _startTime and t <= _endTime
+
+getCM_ExtensionTime() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	extTime = timestamp(timezone, currentYear, currentMonth, currentDay, 15, 0) // Extend to 3:00 PM
+	if extTime <= time
+		nextDay = time + 86400000
+		extTime := timestamp(timezone, year(nextDay), month(nextDay), dayofmonth(nextDay), 15, 0)
+	extTime
+
+CM_fmt_ampm(hh, mm) =>
+	is_pm = hh >= 12
+	hour12 = hh % 12
+	hour12 := hour12 == 0 ? 12 : hour12
+	str.tostring(hour12) + ":" + str.tostring(mm, "00") + (is_pm ? "pm" : "am")
+
+CM_getLineStyle(styleStr) => styleStr == "dotted" ? line.style_dotted : styleStr == "dashed" ? line.style_dashed : line.style_solid
+
+// --- Main Logic ---
+[CM_t_start, CM_t_end] = getCustomMacroTimes()
+CM_is_1m = timeframe.period == "1"
+inMacroWindow = time >= CM_t_start and time <= CM_t_end
+
+// --- Macro High/Low Tracking ---
+if inMacroWindow and CM_showMacroBox and CM_is_1m
+	CM_winHigh := na(CM_winHigh) ? high : math.max(CM_winHigh, high)
+	CM_winLow  := na(CM_winLow)  ? low  : math.min(CM_winLow, low)
+	CM_winStart := na(CM_winStart) ? bar_index : CM_winStart
+	CM_winEnd := bar_index
+	CM_winDrawn := false
+
+// ***FIXED***: First Presented Imbalance (FPI) Detection now checks if the middle candle is in the window.
+if not CM_imbFound and CM_showImbalance and CM_is_1m and isTimeInMacroWindow(time[1])
+	isFVG_Up = high[2] < low[0]
+	isFVG_Down = low[2] > high[0]
+	if isFVG_Up or isFVG_Down
+		CM_imbFound := true
+		CM_imbHigh := isFVG_Up ? low[0] : low[2]
+		CM_imbLow := isFVG_Up ? high[2] : high[0]
+		CM_imbStart := bar_index - 2
+
+// --- Drawing Logic (After Macro Window Ends) ---
+if time > CM_t_end and not CM_winDrawn and CM_is_1m and CM_showMacroBox
+	// Draw Macro Box
+	if not na(CM_winStart) and not na(CM_winHigh) and not na(CM_winLow)
+		macroBox = box.new(left=CM_winStart, top=CM_winHigh, right=CM_winEnd, bottom=CM_winLow, border_color=CM_macroLineColor, bgcolor=CM_macroBoxColor)
+		array.push(CM_macroBoxes, macroBox)
+		windowLabel = CM_fmt_ampm(CM_macroHour, CM_macroStartMinute) + " - " + CM_fmt_ampm((CM_macroHour + 1) % 24, CM_macroEndMinute) + " Macro"
+		macroLabel = label.new(x=CM_winStart, y=CM_winHigh, text=windowLabel, xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_down, textcolor=CM_macroTextColor, size=CM_macroTextSize, color=CM_macroLabelBgColor)
+		array.push(CM_macroLabels, macroLabel)
+
+		if CM_extendMacroLines
+			extensionTargetTime = getCM_ExtensionTime()
+			extensionBars = bar_index + math.round((extensionTargetTime - time) / (timeframe.in_seconds() * 1000))
+			extensionBars := math.min(extensionBars, bar_index + 500)
+			ls = CM_getLineStyle(CM_macroLineStyle)
+			macroName = "9:50 Macro"
+			array.push(CM_macroHighLines, line.new(x1=CM_winEnd, y1=CM_winHigh, x2=extensionBars, y2=CM_winHigh, color=CM_macroLineColor, style=ls))
+			array.push(CM_macroLowLines, line.new(x1=CM_winEnd, y1=CM_winLow, x2=extensionBars, y2=CM_winLow, color=CM_macroLineColor, style=ls))
+			array.push(CM_macroMidLines, line.new(x1=CM_winEnd, y1=(CM_winHigh + CM_winLow)/2, x2=extensionBars, y2=(CM_winHigh + CM_winLow)/2, color=CM_macroLineColor, style=line.style_dashed))
+			array.push(CM_macroPriceLabels, label.new(x=extensionBars, y=CM_winHigh, text=macroName + " | High | " + str.tostring(CM_winHigh, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_macroTextColor, size=CM_macroTextSize, color=CM_macroLabelBgColor))
+			array.push(CM_macroPriceLabels, label.new(x=extensionBars, y=(CM_winHigh + CM_winLow)/2, text=macroName + " | Mid | " + str.tostring((CM_winHigh + CM_winLow)/2, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_macroTextColor, size=CM_macroTextSize, color=CM_macroLabelBgColor))
+			array.push(CM_macroPriceLabels, label.new(x=extensionBars, y=CM_winLow, text=macroName + " | Low | " + str.tostring(CM_winLow, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_macroTextColor, size=CM_macroTextSize, color=CM_macroLabelBgColor))
+
+	// Draw FPI Box
+	if CM_imbFound and not na(CM_imbStart)
+		imbBox = box.new(left=CM_imbStart, top=CM_imbHigh, right=CM_imbStart + 2, bottom=CM_imbLow, border_color=CM_imbLineColor, bgcolor=CM_imbBoxColor)
+		array.push(CM_imbBoxes, imbBox)
+		labelText = "First Imbalance"
+		imbLabel = label.new(x=CM_imbStart, y=CM_imbHigh, text=labelText, xloc=xloc.bar_index, style=label.style_label_down, textcolor=CM_imbTextColor, size=CM_imbTextSize, color=CM_imbLabelBgColor)
+		array.push(CM_imbLabels, imbLabel)
+
+		if CM_extendImbalanceLines
+			mid = (CM_imbHigh + CM_imbLow) / 2
+			extensionTargetTime = getCM_ExtensionTime()
+			extensionBars = bar_index + math.round((extensionTargetTime - time) / (timeframe.in_seconds() * 1000))
+			extensionBars := math.min(extensionBars, bar_index + 500)
+			ls = CM_getLineStyle(CM_imbLineStyle)
+			imbName = "Macro FPI"
+			array.push(CM_imbHighLines, line.new(x1=CM_imbStart + 2, y1=CM_imbHigh, x2=extensionBars, y2=CM_imbHigh, color=CM_imbLineColor, style=ls))
+			array.push(CM_imbMidLines, line.new(x1=CM_imbStart + 2, y1=mid, x2=extensionBars, y2=mid, color=CM_imbLineColor, style=line.style_dashed))
+			array.push(CM_imbLowLines, line.new(x1=CM_imbStart + 2, y1=CM_imbLow, x2=extensionBars, y2=CM_imbLow, color=CM_imbLineColor, style=ls))
+			array.push(CM_imbPriceLabels, label.new(x=extensionBars, y=CM_imbHigh, text=imbName + " | High | " + str.tostring(CM_imbHigh, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_imbTextColor, size=CM_imbTextSize, color=CM_imbLabelBgColor))
+			array.push(CM_imbPriceLabels, label.new(x=extensionBars, y=mid, text=imbName + " | Mid | " + str.tostring(mid, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_imbTextColor, size=CM_imbTextSize, color=CM_imbLabelBgColor))
+			array.push(CM_imbPriceLabels, label.new(x=extensionBars, y=CM_imbLow, text=imbName + " | Low | " + str.tostring(CM_imbLow, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_imbTextColor, size=CM_imbTextSize, color=CM_imbLabelBgColor))
+
+	CM_winDrawn := true
+
+// --- Daily Reset ---
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and hour(time[1], timezone) != startTimeHour
+	// Reset Macro variables
+	CM_winHigh := na
+	CM_winLow := na
+	CM_winStart := na
+	CM_winEnd := na
+	CM_winDrawn := false
+	// Reset Imbalance variables
+	CM_imbFound := false
+	CM_imbHigh := na
+	CM_imbLow := na
+	CM_imbStart := na
+
+// --- Object Cleanup ---
+manage_CM_objects() =>
+	// Macro Objects
+	while array.size(CM_macroBoxes) > globalLookbackPeriod
+		box.delete(array.shift(CM_macroBoxes))
+	while array.size(CM_macroHighLines) > globalLookbackPeriod
+		line.delete(array.shift(CM_macroHighLines))
+	while array.size(CM_macroLowLines) > globalLookbackPeriod
+		line.delete(array.shift(CM_macroLowLines))
+	while array.size(CM_macroMidLines) > globalLookbackPeriod
+		line.delete(array.shift(CM_macroMidLines))
+	while array.size(CM_macroLabels) > globalLookbackPeriod
+		label.delete(array.shift(CM_macroLabels))
+	while array.size(CM_macroPriceLabels) > globalLookbackPeriod * 3
+		label.delete(array.shift(CM_macroPriceLabels))
+	// FPI Objects
+	while array.size(CM_imbBoxes) > globalLookbackPeriod
+		box.delete(array.shift(CM_imbBoxes))
+	while array.size(CM_imbHighLines) > globalLookbackPeriod
+		line.delete(array.shift(CM_imbHighLines))
+	while array.size(CM_imbLowLines) > globalLookbackPeriod
+		line.delete(array.shift(CM_imbLowLines))
+	while array.size(CM_imbMidLines) > globalLookbackPeriod
+		line.delete(array.shift(CM_imbMidLines))
+	while array.size(CM_imbLabels) > globalLookbackPeriod
+		label.delete(array.shift(CM_imbLabels))
+	while array.size(CM_imbPriceLabels) > globalLookbackPeriod * 3
+		label.delete(array.shift(CM_imbPriceLabels))
+
+manage_CM_objects()
+
+
+// ============================================================================== 12:50pm - 1:10pm Macro ===================================================================================
+
+// Inputs for the Macro Window
+groupPMacro = "- - - - - - - - - -  12:50pm - 1:10pm Macro  - - - - - - - - - - - "
+PM_showMacroBox = showPMNYMarketMaker
+PM_extendMacroLines = input.bool(true, "Extend Macro Lines to 3:00 PM", group=groupPMacro)
+PM_macroTextSize = input.string("normal", "Macro Label Text Size", options=["tiny", "small", "normal", "large", "huge"], group=groupPMacro)
+PM_macroLineStyle = input.string("solid", "Macro Line Style", options=["solid", "dashed", "dotted"], group=groupPMacro)
+
+// Inputs for the First Macro Imbalance (FPI)
+groupPImb = "- - - -   12:50pm Macro First Imbalance Settings   - - - - - "
+PM_showImbalance = input.bool(true, "Show First Macro Imbalance", group=groupPImb)
+PM_extendImbalanceLines = input.bool(true, "Extend Imbalance Lines to 3:00 PM", group=groupPImb)
+PM_imbLineStyle = input.string("solid", "Imbalance Line Style", options=["solid", "dashed", "dotted"], group=groupPImb)
+PM_imbTextSize = input.string("normal", "Imbalance Label Text Size", options=["tiny", "small", "normal", "large", "huge"], group=groupPImb)
+
+// --- Constants & Time Settings ---
+PM_macroHour = 12
+PM_macroStartMinute = 50
+PM_macroEndMinute = 10 // This will be 13:10
+
+// --- Drawing Object Arrays ---
+var box[] PM_macroBoxes = array.new_box()
+var line[] PM_macroHighLines = array.new_line()
+var line[] PM_macroLowLines = array.new_line()
+var line[] PM_macroMidLines = array.new_line()
+var label[] PM_macroLabels = array.new_label()
+var label[] PM_macroPriceLabels = array.new_label()
+// FPI Drawing Object Arrays
+var box[] PM_imbBoxes = array.new_box()
+var line[] PM_imbHighLines = array.new_line()
+var line[] PM_imbLowLines = array.new_line()
+var line[] PM_imbMidLines = array.new_line()
+var label[] PM_imbLabels = array.new_label()
+var label[] PM_imbPriceLabels = array.new_label()
+
+// --- State Variables ---
+// Macro
+var float PM_winHigh = na
+var float PM_winLow = na
+var int PM_winStart = na
+var int PM_winEnd = na
+var bool PM_winDrawn = false
+// FPI
+var bool PM_imbFound = false
+var float PM_imbHigh = na
+var float PM_imbLow = na
+var int PM_imbStart = na
+
+// --- Functions ---
+getCustomPMMacroTimes() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	endHour = PM_macroEndMinute < PM_macroStartMinute ? PM_macroHour + 1 : PM_macroHour
+	startTime = timestamp(timezone, currentYear, currentMonth, currentDay, PM_macroHour, PM_macroStartMinute)
+	endTime = timestamp(timezone, currentYear, currentMonth, currentDay, endHour, PM_macroEndMinute)
+	[startTime, endTime]
+
+isTimeInPMMacroWindow(t) =>
+	_year = year(t, timezone)
+	_month = month(t, timezone)
+	_day = dayofmonth(t, timezone)
+	_endHour = PM_macroEndMinute < PM_macroStartMinute ? PM_macroHour + 1 : PM_macroHour
+	_startTime = timestamp(timezone, _year, _month, _day, PM_macroHour, PM_macroStartMinute)
+	_endTime = timestamp(timezone, _year, _month, _day, _endHour, PM_macroEndMinute)
+	t >= _startTime and t <= _endTime
+
+getPM_ExtensionTime() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	extTime = timestamp(timezone, currentYear, currentMonth, currentDay, 15, 0) // Extend to 3:00 PM
+	if extTime <= time
+		nextDay = time + 86400000
+		extTime := timestamp(timezone, year(nextDay), month(nextDay), dayofmonth(nextDay), 15, 0)
+	extTime
+
+// --- Main Logic ---
+[PM_t_start, PM_t_end] = getCustomPMMacroTimes()
+PM_is_1m = timeframe.period == "1"
+inPMMacroWindow = time >= PM_t_start and time <= PM_t_end
+
+// --- Macro High/Low Tracking ---
+if inPMMacroWindow and PM_showMacroBox and PM_is_1m
+	PM_winHigh := na(PM_winHigh) ? high : math.max(PM_winHigh, high)
+	PM_winLow  := na(PM_winLow)  ? low  : math.min(PM_winLow, low)
+	PM_winStart := na(PM_winStart) ? bar_index : PM_winStart
+	PM_winEnd := bar_index
+	PM_winDrawn := false
+
+// --- First Presented Imbalance (FPI) Detection ---
+if not PM_imbFound and PM_showImbalance and PM_is_1m and isTimeInPMMacroWindow(time[1])
+	isFVG_Up = high[2] < low[0]
+	isFVG_Down = low[2] > high[0]
+	if isFVG_Up or isFVG_Down
+		PM_imbFound := true
+		PM_imbHigh := isFVG_Up ? low[0] : low[2]
+		PM_imbLow := isFVG_Up ? high[2] : high[0]
+		PM_imbStart := bar_index - 2
+
+// --- Drawing Logic (After Macro Window Ends) ---
+if time > PM_t_end and not PM_winDrawn and PM_is_1m and PM_showMacroBox
+	// Draw Macro Box
+	if not na(PM_winStart) and not na(PM_winHigh) and not na(PM_winLow)
+		macroBox = box.new(left=PM_winStart, top=PM_winHigh, right=PM_winEnd, bottom=PM_winLow, border_color=CM_macroLineColor, bgcolor=CM_macroBoxColor)
+		array.push(PM_macroBoxes, macroBox)
+		windowLabel = CM_fmt_ampm(PM_macroHour, PM_macroStartMinute) + " - " + CM_fmt_ampm((PM_macroHour + 1) % 24, PM_macroEndMinute) + " Macro"
+		macroLabel = label.new(x=PM_winStart, y=PM_winHigh, text=windowLabel, xloc=xloc.bar_index, yloc=yloc.price, style=label.style_label_down, textcolor=CM_macroTextColor, size=PM_macroTextSize, color=CM_macroLabelBgColor)
+		array.push(PM_macroLabels, macroLabel)
+
+		if PM_extendMacroLines
+			extensionTargetTime = getPM_ExtensionTime()
+			extensionBars = bar_index + math.round((extensionTargetTime - time) / (timeframe.in_seconds() * 1000))
+			extensionBars := math.min(extensionBars, bar_index + 500)
+			ls = CM_getLineStyle(PM_macroLineStyle)
+			macroName = "12:50 Macro"
+			array.push(PM_macroHighLines, line.new(x1=PM_winEnd, y1=PM_winHigh, x2=extensionBars, y2=PM_winHigh, color=CM_macroLineColor, style=ls))
+			array.push(PM_macroLowLines, line.new(x1=PM_winEnd, y1=PM_winLow, x2=extensionBars, y2=PM_winLow, color=CM_macroLineColor, style=ls))
+			array.push(PM_macroMidLines, line.new(x1=PM_winEnd, y1=(PM_winHigh + PM_winLow)/2, x2=extensionBars, y2=(PM_winHigh + PM_winLow)/2, color=CM_macroLineColor, style=line.style_dashed))
+			array.push(PM_macroPriceLabels, label.new(x=extensionBars, y=PM_winHigh, text=macroName + " | High | " + str.tostring(PM_winHigh, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_macroTextColor, size=PM_macroTextSize, color=CM_macroLabelBgColor))
+			array.push(PM_macroPriceLabels, label.new(x=extensionBars, y=(PM_winHigh + PM_winLow)/2, text=macroName + " | Mid | " + str.tostring((PM_winHigh + PM_winLow)/2, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_macroTextColor, size=PM_macroTextSize, color=CM_macroLabelBgColor))
+			array.push(PM_macroPriceLabels, label.new(x=extensionBars, y=PM_winLow, text=macroName + " | Low | " + str.tostring(PM_winLow, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_macroTextColor, size=PM_macroTextSize, color=CM_macroLabelBgColor))
+
+	// Draw FPI Box
+	if PM_imbFound and not na(PM_imbStart)
+		imbBox = box.new(left=PM_imbStart, top=PM_imbHigh, right=PM_imbStart + 2, bottom=PM_imbLow, border_color=CM_imbLineColor, bgcolor=CM_imbBoxColor)
+		array.push(PM_imbBoxes, imbBox)
+		labelText = "First Imbalance"
+		imbLabel = label.new(x=PM_imbStart, y=PM_imbHigh, text=labelText, xloc=xloc.bar_index, style=label.style_label_down, textcolor=CM_imbTextColor, size=PM_imbTextSize, color=CM_imbLabelBgColor)
+		array.push(PM_imbLabels, imbLabel)
+
+		if PM_extendImbalanceLines
+			mid = (PM_imbHigh + PM_imbLow) / 2
+			extensionTargetTime = getPM_ExtensionTime()
+			extensionBars = bar_index + math.round((extensionTargetTime - time) / (timeframe.in_seconds() * 1000))
+			extensionBars := math.min(extensionBars, bar_index + 500)
+			ls = CM_getLineStyle(PM_imbLineStyle)
+			imbName = "PM Macro FPI"
+			array.push(PM_imbHighLines, line.new(x1=PM_imbStart + 2, y1=PM_imbHigh, x2=extensionBars, y2=PM_imbHigh, color=CM_imbLineColor, style=ls))
+			array.push(PM_imbMidLines, line.new(x1=PM_imbStart + 2, y1=mid, x2=extensionBars, y2=mid, color=CM_imbLineColor, style=line.style_dashed))
+			array.push(PM_imbLowLines, line.new(x1=PM_imbStart + 2, y1=PM_imbLow, x2=extensionBars, y2=PM_imbLow, color=CM_imbLineColor, style=ls))
+			array.push(PM_imbPriceLabels, label.new(x=extensionBars, y=PM_imbHigh, text=imbName + " | High | " + str.tostring(PM_imbHigh, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_imbTextColor, size=PM_imbTextSize, color=CM_imbLabelBgColor))
+			array.push(PM_imbPriceLabels, label.new(x=extensionBars, y=mid, text=imbName + " | Mid | " + str.tostring(mid, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_imbTextColor, size=PM_imbTextSize, color=CM_imbLabelBgColor))
+			array.push(PM_imbPriceLabels, label.new(x=extensionBars, y=PM_imbLow, text=imbName + " | Low | " + str.tostring(PM_imbLow, format.mintick), xloc=xloc.bar_index, style=label.style_label_left, textcolor=CM_imbTextColor, size=PM_imbTextSize, color=CM_imbLabelBgColor))
+
+	PM_winDrawn := true
+
+// --- Daily Reset ---
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and hour(time[1], timezone) != startTimeHour
+	// Reset Macro variables
+	PM_winHigh := na
+	PM_winLow := na
+	PM_winStart := na
+	PM_winEnd := na
+	PM_winDrawn := false
+	// Reset Imbalance variables
+	PM_imbFound := false
+	PM_imbHigh := na
+	PM_imbLow := na
+	PM_imbStart := na
+
+// --- Object Cleanup ---
+manage_PM_objects() =>
+	// Macro Objects
+	while array.size(PM_macroBoxes) > globalLookbackPeriod
+		box.delete(array.shift(PM_macroBoxes))
+	while array.size(PM_macroHighLines) > globalLookbackPeriod
+		line.delete(array.shift(PM_macroHighLines))
+	while array.size(PM_macroLowLines) > globalLookbackPeriod
+		line.delete(array.shift(PM_macroLowLines))
+	while array.size(PM_macroMidLines) > globalLookbackPeriod
+		line.delete(array.shift(PM_macroMidLines))
+	while array.size(PM_macroLabels) > globalLookbackPeriod
+		label.delete(array.shift(PM_macroLabels))
+	while array.size(PM_macroPriceLabels) > globalLookbackPeriod * 3
+		label.delete(array.shift(PM_macroPriceLabels))
+	// FPI Objects
+	while array.size(PM_imbBoxes) > globalLookbackPeriod
+		box.delete(array.shift(PM_imbBoxes))
+	while array.size(PM_imbHighLines) > globalLookbackPeriod
+		line.delete(array.shift(PM_imbHighLines))
+	while array.size(PM_imbLowLines) > globalLookbackPeriod
+		line.delete(array.shift(PM_imbLowLines))
+	while array.size(PM_imbMidLines) > globalLookbackPeriod
+		line.delete(array.shift(PM_imbMidLines))
+	while array.size(PM_imbLabels) > globalLookbackPeriod
+		label.delete(array.shift(PM_imbLabels))
+	while array.size(PM_imbPriceLabels) > globalLookbackPeriod * 3
+		label.delete(array.shift(PM_imbPriceLabels))
+
+manage_PM_objects()
+
+
+// ===========================================================================================================================================================================================
+// =================================================================================== Asian Session Range====================================================================================
+// ===========================================================================================================================================================================================
+
+
+groupAsia = "- - - - - - - - - - - - Asian Range Settings - - - - - - - - - - - - "
+// Removed the enable toggle since it's now in master controls
+
+// Replace the hour number inputs with AM/PM dropdown options
+asiaStartTimeOption = input.string("7pm", title="Asia Start Time", options=["5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"], group=groupAsia)
+asiaEndTimeOption = input.string("12am", title="Asia End Time", options=["11pm", "12am", "1am", "2am", "3am"], group=groupAsia)
+
+// Set the effective setting based on master control
+showAsiaRange = showAsiaRangeMaster
+
+// Simplified BSL/SSL line extension - only session option with no dropdown
+extendBSLSSLLines = input.bool(true, title="Extend BSL/SSL Lines", group=groupAsia)
+// Removed the bslsslExtensionOption and custom time inputs
+
+// New input for enhanced Asia range display
+showAsiaMidline = input.bool(true, title="Show Asia Range Midline", group=groupAsia)
+asiaPriceLabelSize = input.string("small", title="Asia Price Label Size", options=["tiny", "small", "normal", "large"], group=groupAsia)
+
+// Function to convert AM/PM time string to hour number
+getHourFromOption(timeStr) =>
+	hour = 0
+	isPM = str.contains(timeStr, "pm")
+	timeValue = str.replace(timeStr, "am", "")
+	timeValue := str.replace(timeValue, "pm", "")
+
+	if timeValue == "12"
+		hour := isPM ? 12 : 0
+	else
+		// Fix: Use int() to convert the float to an integer
+		hour := int(str.tonumber(timeValue))
+		if isPM and hour < 12
+			hour := hour + 12
+	hour
+
+// Convert the string options to hour numbers
+asiaStartHour = getHourFromOption(asiaStartTimeOption)
+asiaEndHour = getHourFromOption(asiaEndTimeOption)
+
+highlightUnswept = input.bool(true, title="Highlight Unswept Asia High/Low", group=groupAsia)
+
+// Variables for Asia session
+var float asiaHigh = na
+var float asiaLow = na
+var int asiaStartTime = na
+var int asiaEndTime = na
+var box[] asiaBoxes = array.new_box()
+var line[] asiaHighLines = array.new_line()
+var line[] asiaLowLines = array.new_line()
+var line[] asiaMidLines = array.new_line() // New array for midlines
+var label[] asiaLabels = array.new_label()
+var label[] asiaPriceLabels = array.new_label() // New array for price labels
+// New arrays for unswept level visualization
+var line[] unsweptHighLines = array.new_line()
+var line[] unsweptLowLines = array.new_line()
+var label[] unsweptHighLabels = array.new_label()
+var label[] unsweptLowLabels = array.new_label()
+var bool asiaBoxDrawn = false
+var bool highSwept = false
+var bool lowSwept = false
+
+// Fix the Asia session time detection logic to handle midnight correctly
+isAsiaSession = ((asiaStartHour < asiaEndHour and hour(time, timezone) >= asiaStartHour and hour(time, timezone) < asiaEndHour) or (asiaStartHour > asiaEndHour and (hour(time, timezone) >= asiaStartHour or hour(time, timezone) < asiaEndHour))) and not asiaBoxDrawn
+
+// Track Asia session high/low
+if isAsiaSession and showAsiaRange
+	if na(asiaHigh) or high > asiaHigh
+		asiaHigh := high
+	if na(asiaLow) or low < asiaLow
+		asiaLow := low
+	if na(asiaStartTime)
+		asiaStartTime := bar_index
+
+// Completely revised logic for Asia session end detection
+isAsiaEndReached = false
+currentHour = hour(time, timezone)
+prevHour = hour(time[1], timezone)
+
+// Check if we've just reached the end hour (handles midnight case specially)
+if not asiaBoxDrawn and not na(asiaHigh)
+	if asiaEndHour == 0 // Midnight case
+		if currentHour == 0 and prevHour == 23
+			isAsiaEndReached := true
+	else if currentHour == asiaEndHour and prevHour != asiaEndHour
+		isAsiaEndReached := true
+
+// Function to convert size string to label.size_* constant
+getLabelSize(sizeStr) =>
+	sizeStr == "tiny" ? size.tiny : sizeStr == "small" ? size.small : sizeStr == "large" ? size.large : size.normal
+
+// FIXED - Function to calculate the Asia extension target time - ensures extension to startTimeHour (3 PM)
+getAsiaExtensionTime() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+	currentHour = hour(time, timezone)
+
+	// Always target startTimeHour (3 PM)
+	targetHour = startTimeHour // This should be 15 (3 PM)
+	targetMinute = 0
+
+	// Create timestamp for today's 3 PM
+	todayTarget = timestamp(timezone, currentYear, currentMonth, currentDay, targetHour, targetMinute)
+
+	// Initialize result variable
+	result = todayTarget
+
+	// If today's 3 PM is already past or if current hour is after 3 PM, use tomorrow's 3 PM
+	if time >= todayTarget or currentHour >= targetHour
+		// Get next day's date
+		nextDay = time + 86400000 // Add 1 day in milliseconds
+		result := timestamp(timezone, year(nextDay), month(nextDay), dayofmonth(nextDay), targetHour, targetMinute)
+
+	result
+
+// FIXED - Function to calculate maximum bars based on timeframe
+getMaxBarCount() =>
+	// Get current timeframe in minutes
+	tf_minutes = timeframe.in_seconds() / 60
+
+	// For 1-minute charts, we need more bars (up to 1440 for a full day)
+	if tf_minutes == 1
+		1500 // Allow more bars for 1-minute charts to reach 3 PM
+	else if tf_minutes <= 5
+		1000 // For 2-5 minute charts
+	else if tf_minutes <= 15
+		500  // For 15-minute charts
+	else
+		300  // For larger timeframes
+
+if isAsiaEndReached and not na(asiaHigh) and not na(asiaLow) and showAsiaRange
+	asiaEndTime := bar_index
+	if showAsiaRange
+		// Create the Asia range box
+		asiaBox = box.new(asiaStartTime, asiaHigh, asiaEndTime, asiaLow, border_color=asiaLineColor, bgcolor=asiaBoxColor)
+		array.push(asiaBoxes, asiaBox)
+
+		// Draw labels
+		asiaLabel = label.new(asiaStartTime, asiaHigh, "Asia Range", style=label.style_label_down, color=asiaLabelBgColor, textcolor=asiaLabelTextColor)
+		array.push(asiaLabels, asiaLabel)
+
+		// Calculate the midpoint of the range
+		asiaMidPoint = (asiaHigh + asiaLow) / 2
+
+		// Format price labels with appropriate precision
+		asiaHighStr = str.tostring(asiaHigh, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+		asiaMidStr = str.tostring(asiaMidPoint, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+		asiaLowStr = str.tostring(asiaLow, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+
+		// Set label size based on user selection
+		labelSizeValue = getLabelSize(asiaPriceLabelSize)
+		asiaName = "Asia Range"
+
+		// Add right-side price labels
+		highLabel = label.new((asiaStartTime + asiaEndTime) / 2, asiaHigh, asiaName + " | High | " + asiaHighStr, style=label.style_label_right, color=color.new(color.white, 100), textcolor=asiaPriceLabelTextColor, size=labelSizeValue)
+		midLabel = label.new((asiaStartTime + asiaEndTime) / 2, asiaMidPoint, asiaName + " | Mid | " + asiaMidStr, style=label.style_label_right, color=color.new(color.black, 100), textcolor=asiaPriceLabelTextColor, size=labelSizeValue)
+		lowLabel = label.new((asiaStartTime + asiaEndTime) / 2, asiaLow, asiaName + " | Low | " + asiaLowStr, style=label.style_label_right, color=color.new(color.black, 100), textcolor=asiaPriceLabelTextColor, size=labelSizeValue)
+
+		// Add labels to array for management
+		array.push(asiaPriceLabels, highLabel)
+		array.push(asiaPriceLabels, midLabel)
+		array.push(asiaPriceLabels, lowLabel)
+
+		// Add 50% midline if enabled
+		if showAsiaMidline
+			midLine = line.new(asiaStartTime, asiaMidPoint, asiaEndTime, asiaMidPoint, color=asiaMidlineColor, style=line.style_dashed, width=1)
+			array.push(asiaMidLines, midLine)
+
+		// Calculate the extension target time for BSL/SSL lines - always to next available 3PM (startTimeHour)
+		extension_target_time = getAsiaExtensionTime()
+
+		// Calculate time difference between current time and extension target
+		timeDiff = extension_target_time - time
+
+		// Convert time difference to number of bars
+		barDiff = math.round(timeDiff / (timeframe.in_seconds() * 1000))
+
+		// Get maximum bar count based on timeframe
+		maxBars = getMaxBarCount()
+
+		// Ensure extension is at least 20 bars but no more than the dynamic maximum
+		extensionEndBar = bar_index + math.min(maxBars, math.max(20, barDiff))
+
+		// FIX: Create lines with proper coordinates
+		// Check timeframe in minutes for using timestamp-based coordinates
+		tf_in_minutes = timeframe.in_seconds() / 60
+
+		var line asia_high_line = na
+		var line asia_low_line = na
+
+		if tf_in_minutes <= 60 // Only use timestamp approach for 1h and smaller timeframes
+			// Draw high and low lines directly to the timestamp using xloc.bar_time
+			asia_high_line := line.new(time, asiaHigh, extension_target_time, asiaHigh, xloc=xloc.bar_time, color=bslColor, width=2)
+			asia_low_line := line.new(time, asiaLow, extension_target_time, asiaLow, xloc=xloc.bar_time, color=sslColor, width=2)
+		else
+			// For larger timeframes, continue using the bar index method
+			asia_high_line := line.new(bar_index, asiaHigh, extensionEndBar, asiaHigh, color=bslColor, width=2)
+			asia_low_line := line.new(bar_index, asiaLow, extensionEndBar, asiaLow, color=sslColor, width=2)
+
+		array.push(asiaHighLines, asia_high_line)
+		array.push(asiaLowLines, asia_low_line)
+
+		// Add BSL and SSL text without the label background
+		bslLabel = label.new(bar_index, asiaHigh, "Asia Range | BSL | " + asiaHighStr, style=label.style_label_right, color=color.new(color.white, 100), textcolor=asiaPriceLabelTextColor)
+		sslLabel = label.new(bar_index, asiaLow, "Asia Range | SSL | " + asiaLowStr, style=label.style_label_right, color=color.new(color.white, 100), textcolor=asiaPriceLabelTextColor)
+		array.push(asiaPriceLabels, bslLabel)
+		array.push(asiaPriceLabels, sslLabel)
+
+	asiaBoxDrawn := true
+
+// Check if Asia high/low are swept during regular session (until start time)
+if not na(asiaHigh) and time < timestamp(timezone, year(time), month(time), dayofmonth(time), startTimeHour, 0) and asiaBoxDrawn and showAsiaRange
+	if high > asiaHigh
+		highSwept := true
+	if low < asiaLow
+		lowSwept := true
+
+// At start time, highlight unswept levels if requested with updated "AR" labels
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and asiaBoxDrawn and highlightUnswept and showAsiaRange
+	if not highSwept
+		// Highlight unswept high (BSL) with updated label - now stored in arrays
+		asiaHighStr = str.tostring(asiaHigh, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+		unsweptHighLine = line.new(bar_index, asiaHigh, bar_index + 100, asiaHigh, color=color.new(bslColor, 0), width=3, style=line.style_solid)
+		unsweptHighLabel = label.new(bar_index, asiaHigh, "Unswept | AR BSL | " + asiaHighStr, style=label.style_label_right, color=color.new(bslColor, 90), textcolor=asiaUnsweptLabelTextColor, size=size.large)
+		array.push(unsweptHighLines, unsweptHighLine)
+		array.push(unsweptHighLabels, unsweptHighLabel)
+
+	if not lowSwept
+		// Highlight unswept low (SSL) with updated label - now stored in arrays
+		asiaLowStr = str.tostring(asiaLow, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+		unsweptLowLine = line.new(bar_index, asiaLow, bar_index + 100, asiaLow, color=color.new(sslColor, 0), width=3, style=line.style_solid)
+		unsweptLowLabel = label.new(bar_index, asiaLow, "Unswept | AR SSL | " + asiaLowStr, style=label.style_label_right, color=color.new(sslColor, 90), textcolor=asiaUnsweptLabelTextColor, size=size.large)
+		array.push(unsweptLowLines, unsweptLowLine)
+		array.push(unsweptLowLabels, unsweptLowLabel)
+
+// Reset Asia variables at new day (using start time as day boundary)
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and hour(time[1], timezone) != startTimeHour
+	asiaHigh := na
+	asiaLow := na
+	asiaStartTime := na
+	asiaEndTime := na
+	asiaBoxDrawn := false
+	highSwept := false
+	lowSwept := false
+
+// ***CORRECTED LOOKBACK LOGIC***
+// This function now correctly enforces the lookback period for all Asia Range drawings.
+manage_asia_objects() =>
+	while array.size(asiaBoxes) > globalLookbackPeriod
+		box.delete(array.shift(asiaBoxes))
+	while array.size(asiaHighLines) > globalLookbackPeriod
+		line.delete(array.shift(asiaHighLines))
+	while array.size(asiaLowLines) > globalLookbackPeriod
+		line.delete(array.shift(asiaLowLines))
+	while array.size(asiaMidLines) > globalLookbackPeriod
+		line.delete(array.shift(asiaMidLines))
+	while array.size(asiaLabels) > globalLookbackPeriod
+		label.delete(array.shift(asiaLabels))
+	while array.size(unsweptHighLines) > globalLookbackPeriod
+		line.delete(array.shift(unsweptHighLines))
+	while array.size(unsweptLowLines) > globalLookbackPeriod
+		line.delete(array.shift(unsweptLowLines))
+	while array.size(unsweptHighLabels) > globalLookbackPeriod
+		label.delete(array.shift(unsweptHighLabels))
+	while array.size(unsweptLowLabels) > globalLookbackPeriod
+		label.delete(array.shift(unsweptLowLabels))
+	// Each range has 5 price labels (high, mid, low, BSL, SSL)
+	while array.size(asiaPriceLabels) > globalLookbackPeriod * 5
+		label.delete(array.shift(asiaPriceLabels))
+
+// Run the cleanup function on each bar
+manage_asia_objects()
+
+
+// ===========================================================================================================================================================================================
+// =================================================================================== Vertical Lines ========================================================================================
+// ===========================================================================================================================================================================================
+
+groupVertical = "- - - - - - - - - - - - - - - Vertical Lines - - - - - - - - - - - - - - - "
+
+// Add individual toggles for each vertical line
+enableMidnightLine = input.bool(true, "Show Midnight Vertical Line", group=groupVertical)
+enableStartDayLine = input.bool(true, "Show Start of Day Vertical Line", group=groupVertical)
+start_time_transparency = input.int(60, "Start of Day Line Transparency (0-100)", minval=0, maxval=100, group=groupVertical)
+midnight_transparency = input.int(85, "Midnight Line Transparency (0-100)", minval=0, maxval=100, group=groupVertical)
+line_width = input.int(1, "Line Width", minval=1, maxval=10, group=groupVertical)
+
+// Set the effective settings based on master control AND individual toggles
+showMidnightLine = showVerticalLinesMaster and enableMidnightLine
+showStartDayLine = showVerticalLinesMaster and enableStartDayLine
+
+// Arrays to store vertical lines for lookback management
+var line[] midnightLines = array.new_line()
+var line[] startTimeLines = array.new_line()
+
+is_midnight_vert = (hour(time, "America/New_York") == 0 and minute(time, "America/New_York") == 0)
+is_start_time = (hour(time, "America/New_York") == startTimeHour and minute(time, "America/New_York") == 0)
+
+midnight_time_vert = request.security(syminfo.tickerid, "1", is_midnight_vert ? time : na, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+start_time_vert = request.security(syminfo.tickerid, "1", is_start_time ? time : na, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+
+highestHigh = ta.highest(high, 100)
+lowestLow = ta.lowest(low, 100)
+upper_label_price = highestHigh + 0.1 * (highestHigh - lowestLow)
+
+if showMidnightLine and not na(midnight_time_vert)
+	// Create and store the midnight vertical line
+	midnightLine = line.new(midnight_time_vert, high, midnight_time_vert, low, xloc=xloc.bar_time, color=color.new(vertLineColor, midnight_transparency), style=line.style_solid, width=line_width, extend=extend.both)
+	array.push(midnightLines, midnightLine)
+
+if showStartDayLine and not na(start_time_vert)
+	// Create and store the start of day vertical line
+	startTimeLine = line.new(start_time_vert, high, start_time_vert, low, xloc=xloc.bar_time, color=color.new(startDayLineColor, start_time_transparency), style=line.style_solid, width=line_width, extend=extend.both)
+	array.push(startTimeLines, startTimeLine)
+
+// Manage vertical lines according to lookback period
+manage_vertical_lines() =>
+	// Manage midnight lines
+	while array.size(midnightLines) > globalLookbackPeriod
+		line.delete(array.shift(midnightLines))
+
+	// Manage start time lines
+	while array.size(startTimeLines) > globalLookbackPeriod
+		line.delete(array.shift(startTimeLines))
+
+// Run the cleanup function on each bar
+manage_vertical_lines()
+
+// ===========================================================================================================================================================================================
+// =================================================================================== 7-9am Range ==========================================================================================
+// ===========================================================================================================================================================================================
+
+groupSevenNine = "- - - - - - - - - - - - 7-9am Range Settings - - - - - - - - - - - - - "
+
+// Set the effective setting based on master control
+showSevenNineRange = showSevenNineRangeMaster
+
+// Range time settings
+sevenNineStartHour = 7
+sevenNineEndHour = 9
+
+// Visual settings
+sevenNinePriceLabelSize = input.string("small", title="7-9am Price Label Size", options=["tiny", "small", "normal", "large"], group=groupSevenNine)
+
+// Extension settings
+extendSevenNineBSLSSLLines = input.bool(true, title="Extend 7-9am BSL/SSL Lines", group=groupSevenNine)
+showSevenNineMidline = input.bool(true, title="Show 7-9am Range Midline", group=groupSevenNine)
+// Highlight unswept levels
+highlightUnsweptSevenNine = input.bool(true, title="Highlight Unswept 7-9am High/Low", group=groupSevenNine)
+
+// Variables for 7-9am session
+var float sevenNineHigh = na
+var float sevenNineLow = na
+var int sevenNineStartTime = na
+var int sevenNineEndTime = na
+var box[] sevenNineBoxes = array.new_box()
+var line[] sevenNineHighLines = array.new_line()
+var line[] sevenNineLowLines = array.new_line()
+var line[] sevenNineMidLines = array.new_line()
+var label[] sevenNineLabels = array.new_label()
+var label[] sevenNinePriceLabels = array.new_label()
+var line[] unsweptSevenNineHighLines = array.new_line()
+var line[] unsweptSevenNineLowLines = array.new_line()
+var label[] unsweptSevenNineHighLabels = array.new_label()
+var label[] unsweptSevenNineLowLabels = array.new_label()
+var bool sevenNineBoxDrawn = false
+var bool sevenNineHighSwept = false
+var bool sevenNineLowSwept = false
+
+// Check if we're in the 7-9am session
+isSevenNineSession = hour(time, timezone) >= sevenNineStartHour and hour(time, timezone) < sevenNineEndHour and not sevenNineBoxDrawn
+
+// Track 7-9am session high/low
+if isSevenNineSession and showSevenNineRange
+	if na(sevenNineHigh) or high > sevenNineHigh
+		sevenNineHigh := high
+	if na(sevenNineLow) or low < sevenNineLow
+		sevenNineLow := low
+	if na(sevenNineStartTime)
+		sevenNineStartTime := bar_index
+
+// Check if we've reached 9am (end of range)
+isSevenNineEndReached = hour(time, timezone) == sevenNineEndHour and minute(time, timezone) == 0 and hour(time[1], timezone) != sevenNineEndHour
+
+// Function to get label size
+getSevenNineLabelSize(sizeStr) =>
+	sizeStr == "tiny" ? size.tiny : sizeStr == "small" ? size.small : sizeStr == "large" ? size.large : size.normal
+
+// Function to calculate the extension target time (to 3 PM)
+getSevenNineExtensionTime() =>
+	currentYear = year(time)
+	currentMonth = month(time)
+	currentDay = dayofmonth(time)
+
+	// Target 3 PM (15:00)
+	targetHour = startTimeHour // This should be 15 (3 PM)
+	targetMinute = 0
+
+	// Create timestamp for today's 3 PM
+	todayTarget = timestamp(timezone, currentYear, currentMonth, currentDay, targetHour, targetMinute)
+
+	// If today's 3 PM is already past, use tomorrow's 3 PM
+	result = todayTarget
+	if time >= todayTarget
+		nextDay = time + 86400000 // Add 1 day in milliseconds
+		result := timestamp(timezone, year(nextDay), month(nextDay), dayofmonth(nextDay), targetHour, targetMinute)
+
+	result
+
+// Draw the 7-9am range box and lines when we reach 9am
+if isSevenNineEndReached and not na(sevenNineHigh) and not na(sevenNineLow) and showSevenNineRange
+	sevenNineEndTime := bar_index
+
+	// Create the 7-9am range box
+	sevenNineBox = box.new(sevenNineStartTime, sevenNineHigh, sevenNineEndTime, sevenNineLow, border_color=sevenNineLineColor, bgcolor=sevenNineBoxColor)
+	array.push(sevenNineBoxes, sevenNineBox)
+
+	// Draw main label
+	sevenNineLabel = label.new(sevenNineStartTime, sevenNineHigh, "7-9am Range", style=label.style_label_down, color=sevenNineLabelBgColor, textcolor=sevenNineLabelTextColor)
+	array.push(sevenNineLabels, sevenNineLabel)
+
+	// Calculate the midpoint
+	sevenNineMidPoint = (sevenNineHigh + sevenNineLow) / 2
+
+	// Format price labels
+	sevenNineHighStr = str.tostring(sevenNineHigh, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+	sevenNineMidStr = str.tostring(sevenNineMidPoint, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+	sevenNineLowStr = str.tostring(sevenNineLow, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+
+	// Set label size
+	labelSizeValue = getSevenNineLabelSize(sevenNinePriceLabelSize)
+	sevenNineName = "7-9am Range"
+
+	// Add price labels
+	highLabel = label.new((sevenNineStartTime + sevenNineEndTime) / 2, sevenNineHigh, sevenNineName + " | High | " + sevenNineHighStr, style=label.style_label_right, color=color.new(color.white, 100), textcolor=sevenNinePriceLabelTextColor, size=labelSizeValue)
+	midLabel = label.new((sevenNineStartTime + sevenNineEndTime) / 2, sevenNineMidPoint, sevenNineName + " | Mid | " + sevenNineMidStr, style=label.style_label_right, color=color.new(color.black, 100), textcolor=sevenNinePriceLabelTextColor, size=labelSizeValue)
+	lowLabel = label.new((sevenNineStartTime + sevenNineEndTime) / 2, sevenNineLow, sevenNineName + " | Low | " + sevenNineLowStr, style=label.style_label_right, color=color.new(color.black, 100), textcolor=sevenNinePriceLabelTextColor, size=labelSizeValue)
+
+	array.push(sevenNinePriceLabels, highLabel)
+	array.push(sevenNinePriceLabels, midLabel)
+	array.push(sevenNinePriceLabels, lowLabel)
+
+	// Add midline if enabled
+	if showSevenNineMidline
+		midLine = line.new(sevenNineStartTime, sevenNineMidPoint, sevenNineEndTime, sevenNineMidPoint, color=sevenNineMidlineColor, style=line.style_dashed, width=1)
+		array.push(sevenNineMidLines, midLine)
+
+	// Draw BSL/SSL extension lines if enabled
+	if extendSevenNineBSLSSLLines
+		// Calculate extension target time
+		extension_target_time = getSevenNineExtensionTime()
+
+		// For timeframes <= 60 minutes, use timestamp-based coordinates
+		tf_in_minutes = timeframe.in_seconds() / 60
+
+		var line seven_nine_high_line = na
+		var line seven_nine_low_line = na
+
+		if tf_in_minutes <= 60
+			// Draw lines using timestamp coordinates
+			seven_nine_high_line := line.new(time, sevenNineHigh, extension_target_time, sevenNineHigh, xloc=xloc.bar_time, color=sevenNineBslColor, width=2)
+			seven_nine_low_line := line.new(time, sevenNineLow, extension_target_time, sevenNineLow, xloc=xloc.bar_time, color=sevenNineSslColor, width=2)
+		else
+			// For larger timeframes, use bar index method
+			timeDiff = extension_target_time - time
+			barDiff = math.round(timeDiff / (timeframe.in_seconds() * 1000))
+			maxBars = tf_in_minutes == 1 ? 1500 : tf_in_minutes <= 5 ? 1000 : tf_in_minutes <= 15 ? 500 : 300
+			extensionEndBar = bar_index + math.min(maxBars, math.max(20, barDiff))
+
+			seven_nine_high_line := line.new(bar_index, sevenNineHigh, extensionEndBar, sevenNineHigh, color=sevenNineBslColor, width=2)
+			seven_nine_low_line := line.new(bar_index, sevenNineLow, extensionEndBar, sevenNineLow, color=sevenNineSslColor, width=2)
+
+		array.push(sevenNineHighLines, seven_nine_high_line)
+		array.push(sevenNineLowLines, seven_nine_low_line)
+
+		// Add BSL and SSL labels
+		bslLabel = label.new(bar_index, sevenNineHigh, "7-9am Range | BSL | " + sevenNineHighStr, style=label.style_label_right, color=color.new(color.white, 100), textcolor=sevenNinePriceLabelTextColor)
+		sslLabel = label.new(bar_index, sevenNineLow, "7-9am Range | SSL | " + sevenNineLowStr, style=label.style_label_right, color=color.new(color.white, 100), textcolor=sevenNinePriceLabelTextColor)
+		array.push(sevenNinePriceLabels, bslLabel)
+		array.push(sevenNinePriceLabels, sslLabel)
+
+	sevenNineBoxDrawn := true
+
+// Check if 7-9am high/low are swept during the day (until start time)
+if not na(sevenNineHigh) and time < timestamp(timezone, year(time), month(time), dayofmonth(time), startTimeHour, 0) and sevenNineBoxDrawn and showSevenNineRange
+	// Check if high is swept
+	if high > sevenNineHigh and not sevenNineHighSwept
+		sevenNineHighSwept := true
+		// Remove unswept high line and label if they exist
+		if array.size(unsweptSevenNineHighLines) > 0
+			line.delete(array.pop(unsweptSevenNineHighLines))
+		if array.size(unsweptSevenNineHighLabels) > 0
+			label.delete(array.pop(unsweptSevenNineHighLabels))
+
+	// Check if low is swept
+	if low < sevenNineLow and not sevenNineLowSwept
+		sevenNineLowSwept := true
+		// Remove unswept low line and label if they exist
+		if array.size(unsweptSevenNineLowLines) > 0
+			line.delete(array.pop(unsweptSevenNineLowLines))
+		if array.size(unsweptSevenNineLowLabels) > 0
+			label.delete(array.pop(unsweptSevenNineLowLabels))
+
+// At start time (3 PM), highlight unswept levels if requested
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and sevenNineBoxDrawn and highlightUnsweptSevenNine and showSevenNineRange
+	if not sevenNineHighSwept
+		// Highlight unswept high (BSL)
+		sevenNineHighStr = str.tostring(sevenNineHigh, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+		unsweptHighLine = line.new(bar_index, sevenNineHigh, bar_index + 100, sevenNineHigh, color=color.new(sevenNineBslColor, 0), width=3, style=line.style_solid)
+		unsweptHighLabel = label.new(bar_index, sevenNineHigh, "Unswept | 7-9 BSL | " + sevenNineHighStr, style=label.style_label_right, color=color.new(sevenNineBslColor, 90), textcolor=sevenNineUnsweptLabelTextColor, size=size.large)
+		array.push(unsweptSevenNineHighLines, unsweptHighLine)
+		array.push(unsweptSevenNineHighLabels, unsweptHighLabel)
+
+	if not sevenNineLowSwept
+		// Highlight unswept low (SSL)
+		sevenNineLowStr = str.tostring(sevenNineLow, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+		unsweptLowLine = line.new(bar_index, sevenNineLow, bar_index + 100, sevenNineLow, color=color.new(sevenNineSslColor, 0), width=3, style=line.style_solid)
+		unsweptLowLabel = label.new(bar_index, sevenNineLow, "Unswept | 7-9 SSL | " + sevenNineLowStr, style=label.style_label_right, color=color.new(sevenNineSslColor, 90), textcolor=sevenNineUnsweptLabelTextColor, size=size.large)
+		array.push(unsweptSevenNineLowLines, unsweptLowLine)
+		array.push(unsweptSevenNineLowLabels, unsweptLowLabel)
+
+// Reset 7-9am variables at new day (using start time as day boundary)
+if hour(time, timezone) == startTimeHour and minute(time, timezone) == 0 and hour(time[1], timezone) != startTimeHour
+	sevenNineHigh := na
+	sevenNineLow := na
+	sevenNineStartTime := na
+	sevenNineEndTime := na
+	sevenNineBoxDrawn := false
+	sevenNineHighSwept := false
+	sevenNineLowSwept := false
+
+// Manage 7-9am objects according to lookback period
+manage_seven_nine_objects() =>
+	// Manage boxes
+	while array.size(sevenNineBoxes) > globalLookbackPeriod
+		box.delete(array.shift(sevenNineBoxes))
+
+	// Manage BSL/SSL lines
+	while array.size(sevenNineHighLines) > globalLookbackPeriod
+		line.delete(array.shift(sevenNineHighLines))
+	while array.size(sevenNineLowLines) > globalLookbackPeriod
+		line.delete(array.shift(sevenNineLowLines))
+
+	// Manage unswept lines and labels
+	while array.size(unsweptSevenNineHighLines) > globalLookbackPeriod
+		line.delete(array.shift(unsweptSevenNineHighLines))
+	while array.size(unsweptSevenNineLowLines) > globalLookbackPeriod
+		line.delete(array.shift(unsweptSevenNineLowLines))
+	while array.size(unsweptSevenNineHighLabels) > globalLookbackPeriod
+		label.delete(array.shift(unsweptSevenNineHighLabels))
+	while array.size(unsweptSevenNineLowLabels) > globalLookbackPeriod
+		label.delete(array.shift(unsweptSevenNineLowLabels))
+
+	// Manage midlines
+	while array.size(sevenNineMidLines) > globalLookbackPeriod
+		line.delete(array.shift(sevenNineMidLines))
+
+	// Manage labels
+	while array.size(sevenNineLabels) > globalLookbackPeriod
+		label.delete(array.shift(sevenNineLabels))
+
+	// Manage price labels - up to 5 per box (high, mid, low, BSL, SSL)
+	while array.size(sevenNinePriceLabels) > globalLookbackPeriod * 5
+		label.delete(array.shift(sevenNinePriceLabels))
+
+// Run the cleanup function on each bar
+manage_seven_nine_objects()
+
+// ===========================================================================================================================================================================================
+// ================================================================================= Previous Day High/Low ==================================================================================
+// ===========================================================================================================================================================================================
+
+groupPrevDayHL = "- - - - - - - - - - - Previous Day High/Low - - - - - - - - - - - "
+
+// Visual settings
+prevDayLineWidth = input.int(2, title="Line Width", minval=1, maxval=5, group=groupPrevDayHL)
+prevDayLineStyle = input.string("solid", title="Line Style", options=["solid", "dashed", "dotted"], group=groupPrevDayHL)
+
+// Label settings
+showPrevDayLabels = input.bool(true, title="Show Price Labels", group=groupPrevDayHL)
+prevDayLabelSize = input.string("small", title="Label Size", options=["tiny", "small", "normal", "large"], group=groupPrevDayHL)
+
+// Extension settings
+extendPrevDayLines = input.bool(true, title="Extend Lines to Next Day Start", group=groupPrevDayHL)
+
+// Set the effective setting based on master control
+showPrevDayHL = showPrevDayHLMaster
+
+// Arrays for storing drawing objects
+var line[] prevDayHighLines = array.new_line()
+var line[] prevDayLowLines = array.new_line()
+var label[] prevDayHighLabels = array.new_label()
+var label[] prevDayLowLabels = array.new_label()
+
+// Variables to track daily high/low
+var float currentDayHigh = na
+var float currentDayLow = na
+var int dayStartBar = na
+var bool newDayStarted = false
+
+// Function to get line style
+getPrevDayLineStyle(styleStr) =>
+	styleStr == "dotted" ? line.style_dotted : styleStr == "dashed" ? line.style_dashed : line.style_solid
+
+// Function to get label size
+getPrevDayLabelSize(sizeStr) =>
+	sizeStr == "tiny" ? size.tiny : sizeStr == "small" ? size.small : sizeStr == "large" ? size.large : size.normal
+
+// Detect start of new trading day (6 PM)
+isNewTradingDay = hour(time, timezone) == 18 and minute(time, timezone) == 0 and hour(time[1], timezone) != 18
+
+// Track daily high/low during the trading day
+if showPrevDayHL
+	// Reset tracking at start of new trading day
+	if isNewTradingDay
+		// Draw lines for previous day's high/low before resetting
+		if not na(currentDayHigh) and not na(currentDayLow) and not na(dayStartBar)
+			// Format price strings
+			highPriceStr = str.tostring(currentDayHigh, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+			lowPriceStr = str.tostring(currentDayLow, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+
+			// Get line style
+			lineStyle = getPrevDayLineStyle(prevDayLineStyle)
+
+			// Calculate previous day's 6 PM timestamp for line start
+			prevDayStartTime = timestamp(timezone, year(time[1]), month(time[1]), dayofmonth(time[1]), 18, 0)
+
+			// Create high line
+			var line prevHighLine = na
+			if not extendPrevDayLines
+				// Draw from previous day 6 PM to current 6 PM
+				prevHighLine := line.new(prevDayStartTime, currentDayHigh, time, currentDayHigh, xloc=xloc.bar_time, color=prevDayHighColor, width=prevDayLineWidth, style=lineStyle)
+			else
+				// Draw from day start bar to current bar
+				prevHighLine := line.new(dayStartBar, currentDayHigh, bar_index, currentDayHigh, color=prevDayHighColor, width=prevDayLineWidth, style=lineStyle)
+
+			array.push(prevDayHighLines, prevHighLine)
+
+			// Create low line
+			var line prevLowLine = na
+			if not extendPrevDayLines
+				// Draw from previous day 6 PM to current 6 PM
+				prevLowLine := line.new(prevDayStartTime, currentDayLow, time, currentDayLow, xloc=xloc.bar_time, color=prevDayLowColor, width=prevDayLineWidth, style=lineStyle)
+			else
+				// Draw from day start bar to current bar
+				prevLowLine := line.new(dayStartBar, currentDayLow, bar_index, currentDayLow, color=prevDayLowColor, width=prevDayLineWidth, style=lineStyle)
+
+			array.push(prevDayLowLines, prevLowLine)
+
+			// Add labels if enabled
+			if showPrevDayLabels
+				labelSize = getPrevDayLabelSize(prevDayLabelSize)
+
+				// Position labels at the current bar (end of line)
+				highLabel = label.new(bar_index, currentDayHigh, "Prev Day | High | " + highPriceStr, color=pdhlLabelBgColor, textcolor=prevDayTextColor, style=label.style_label_left, size=labelSize)
+				lowLabel = label.new(bar_index, currentDayLow, "Prev Day | Low | " + lowPriceStr, color=pdhlLabelBgColor, textcolor=prevDayTextColor, style=label.style_label_left, size=labelSize)
+
+				array.push(prevDayHighLabels, highLabel)
+				array.push(prevDayLowLabels, lowLabel)
+
+		// Reset for new day
+		currentDayHigh := high
+		currentDayLow := low
+		dayStartBar := bar_index
+		newDayStarted := true
+	else
+		// Update daily high/low during the trading day
+		if not na(currentDayHigh)
+			currentDayHigh := math.max(currentDayHigh, high)
+		else
+			currentDayHigh := high
+
+		if not na(currentDayLow)
+			currentDayLow := math.min(currentDayLow, low)
+		else
+			currentDayLow := low
+
+		if na(dayStartBar)
+			dayStartBar := bar_index
+
+// Manage previous day high/low objects according to lookback period
+manage_prev_day_hl_objects() =>
+	// Manage high lines
+	while array.size(prevDayHighLines) > globalLookbackPeriod
+		line.delete(array.shift(prevDayHighLines))
+
+	// Manage low lines
+	while array.size(prevDayLowLines) > globalLookbackPeriod
+		line.delete(array.shift(prevDayLowLines))
+
+	// Manage high labels
+	while array.size(prevDayHighLabels) > globalLookbackPeriod
+		label.delete(array.shift(prevDayHighLabels))
+
+	// Manage low labels
+	while array.size(prevDayLowLabels) > globalLookbackPeriod
+		label.delete(array.shift(prevDayLowLabels))
+
+// Run the cleanup function on each bar
+manage_prev_day_hl_objects()
+
+// ===========================================================================================================================================================================================
+// ================================================================================= Average Daily Range ===================================================================================
+// ===========================================================================================================================================================================================
+
+groupADR = "- - - - - - - - - - - Average Daily Range (ADR) - - - - - - - - - - - "
+
+// Master control (this should be defined elsewhere in your code)
+// Table display settings
+adrTablePosition = input.string("bottom_right", title="ADR Table Position", options=["top_left", "top_center", "top_right", "middle_left", "middle_center", "middle_right", "bottom_left", "bottom_center", "bottom_right"], group=groupADR)
+adrTableSize = input.string("normal", title="ADR Table Size", options=["tiny", "small", "normal", "large", "huge"], group=groupADR)
+
+// Display options
+showCurrentRange = input.bool(true, title="Show Current Day Range", group=groupADR)
+showRangeCompletion = input.bool(true, title="Show Range Completion %", group=groupADR)
+showCurrentADRLines = input.bool(true, title="Show Current Session ADR Lines", group=groupADR)
+
+// ADR session timing
+adrDayStart = input.int(18, "ADR Day Start Hour (24hr)", minval=0, maxval=23, group=groupADR)
+adrDayFinish = input.int(17, "ADR Day Finish Hour (24hr)", minval=0, maxval=23, group=groupADR)
+
+// === ADR Projections ===
+groupADRProjections = "- - - - ADR Projection Settings - - - -"
+adrDirection = input.string("Both", "ADR Direction", options=["Bullish", "Bearish", "Both"], group=groupADRProjections)
+showBullishADR = adrDirection == "Bullish" or adrDirection == "Both"
+showBearishADR = adrDirection == "Bearish" or adrDirection == "Both"
+
+// Set the effective setting based on master control AND timeframe.
+// The ADR will only show on timeframes less than 1 Day.
+showADR = showADRMaster and timeframe.in_seconds() < 86400
+
+// Variables for ADR calculation
+var float[] dailyRanges = array.new_float()
+var float currentADR = na
+var bool adrCalculated = false
+var table adrTable = na
+var int updateCounter = 0
+
+// Variables for historical ADR lines and labels
+var line[] bullishADRLines = array.new<line>()
+var line[] bearishADRLines = array.new<line>()
+var label[] bullishADRLabels = array.new<label>()
+var label[] bearishADRLabels = array.new<label>()
+
+// Variables for current session lines and labels
+var line currentBullishLine = na
+var line currentBearishLine = na
+var label currentBullishLabel = na
+var label currentBearishLabel = na
+
+// ***REVISED SESSION TRACKING VARIABLES***
+var int sessionStartBar = na
+var float sessionHigh = na
+var float sessionLow = na
+
+// Function to get table position
+getTablePosition(pos) =>
+	pos == "top_left" ? position.top_left : pos == "top_center" ? position.top_center : pos == "top_right" ? position.top_right : pos == "middle_left" ? position.middle_left : pos == "middle_center" ? position.middle_center : pos == "middle_right" ? position.middle_right : pos == "bottom_left" ? position.bottom_left : pos == "bottom_center" ? position.bottom_center : position.bottom_right
+
+// Function to get table size
+getTableSize(sizeStr) =>
+	sizeStr == "tiny" ? size.tiny : sizeStr == "small" ? size.small : sizeStr == "large" ? size.large : sizeStr == "huge" ? size.huge : size.normal
+
+// Function to get update frequency (hardcoded to every bar)
+getUpdateFreq() => 1
+
+// Function to detect instrument type and calculate range in appropriate units
+calculateRangeInUnits(highPrice, lowPrice) =>
+	rawRange = highPrice - lowPrice
+	symbol = syminfo.ticker
+	if str.contains(symbol, "EURUSD")
+		[rawRange / syminfo.mintick / 10, "pips"]
+	else if str.contains(symbol, "NAS") or str.contains(symbol, "NDX") or str.contains(symbol, "NASDAQ")
+		[rawRange, "points"]
+	else
+		[rawRange, "units"]
+
+// Function to format range value based on instrument
+formatRangeValue(rangeValue, units) =>
+	if units == "pips"
+		str.tostring(rangeValue, "#.#") + " pips"
+	else if units == "points"
+		str.tostring(rangeValue, "#.#") + " pts"
+	else
+		str.tostring(rangeValue, syminfo.mintick < 0.01 ? "#.####" : syminfo.mintick < 0.1 ? "#.###" : syminfo.mintick < 1 ? "#.##" : "#.#")
+
+// Function to get day of week string
+getDayOfWeek(timeValue) =>
+	dayOfWeek = dayofweek(timeValue)
+	switch dayOfWeek
+		1 => "Sun"
+		2 => "Mon"
+		3 => "Tue"
+		4 => "Wed"
+		5 => "Thu"
+		6 => "Fri"
+		7 => "Sat"
+		=> "Unknown"
+
+// Function to format date string
+formatDate(timeValue) =>
+	str.tostring(dayofmonth(timeValue)) + "/" + str.tostring(month(timeValue)) + "/" + str.tostring(year(timeValue))
+
+// This function checks if the current bar is the start of a new day, regardless of timeframe.
+isNewDay() =>
+	t = time("D")
+	t != t[1]
+
+// ***CORRECTED FUNCTION PLACEMENT***
+// Function to clean up old historical lines/labels beyond lookback period
+cleanupHistoricalDrawings() =>
+	while array.size(bullishADRLines) > globalLookbackPeriod
+		line.delete(array.shift(bullishADRLines))
+	while array.size(bearishADRLines) > globalLookbackPeriod
+		line.delete(array.shift(bearishADRLines))
+	while array.size(bullishADRLabels) > globalLookbackPeriod
+		label.delete(array.shift(bullishADRLabels))
+	while array.size(bearishADRLabels) > globalLookbackPeriod
+		label.delete(array.shift(bearishADRLabels))
+
+// ***REWRITTEN SESSION LOGIC***
+if isNewDay() and showADR
+	// --- Step 1: Process and Draw Previous Day's Completed Session ---
+	// On the first bar of a new day, the data from the previous bar `[1]` holds the final values for the completed session.
+	float prevSessionHigh = sessionHigh[1]
+	float prevSessionLow = sessionLow[1]
+	int prevSessionStartBar = sessionStartBar[1]
+	int prevSessionEndBar = bar_index[1]
+
+	if not na(prevSessionHigh) and not na(prevSessionLow)
+		[sessionRangeValue, sessionUnits] = calculateRangeInUnits(prevSessionHigh, prevSessionLow)
+		array.push(dailyRanges, sessionRangeValue)
+		while array.size(dailyRanges) > globalLookbackPeriod
+			array.shift(dailyRanges)
+
+		if array.size(dailyRanges) > 0
+			rangeSum = 0.0
+			for i = 0 to array.size(dailyRanges) - 1
+				rangeSum += array.get(dailyRanges, i)
+			currentADR := rangeSum / array.size(dailyRanges)
+			adrCalculated := true
+
+		if not na(currentADR) and not na(prevSessionStartBar)
+			bullishADRLevel = prevSessionLow + currentADR
+			bearishADRLevel = prevSessionHigh - currentADR
+			middleBar = math.round((prevSessionStartBar + prevSessionEndBar) / 2)
+			dateText = getDayOfWeek(time[1]) + " " + formatDate(time[1])
+
+			if showBullishADR
+				bullishLine = line.new(x1=prevSessionStartBar, y1=bullishADRLevel, x2=prevSessionEndBar, y2=bullishADRLevel, color=adrLineColorUp, width=2)
+				bullishADRPriceStr = str.tostring(bullishADRLevel, format.mintick)
+				bullishLabel = label.new(x=middleBar, y=bullishADRLevel, text="ADR | Bullish | " + bullishADRPriceStr + "\n(" + formatRangeValue(currentADR, sessionUnits) + " from Low)", style=label.style_label_center, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+				array.push(bullishADRLines, bullishLine)
+				array.push(bullishADRLabels, bullishLabel)
+
+			if showBearishADR
+				bearishLine = line.new(x1=prevSessionStartBar, y1=bearishADRLevel, x2=prevSessionEndBar, y2=bearishADRLevel, color=adrLineColorDn, width=2)
+				bearishADRPriceStr = str.tostring(bearishADRLevel, format.mintick)
+				bearishLabel = label.new(x=middleBar, y=bearishADRLevel, text="ADR | Bearish | " + bearishADRPriceStr + "\n(" + formatRangeValue(currentADR, sessionUnits) + " from High)", style=label.style_label_center, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+				array.push(bearishADRLines, bearishLine)
+				array.push(bearishADRLabels, bearishLabel)
+
+	// --- Step 2: Reset Variables for the New/Current Session ---
+	sessionStartBar := bar_index
+	sessionHigh := high
+	sessionLow := low
+
+	// Cleanup drawings to respect lookback period
+	cleanupHistoricalDrawings()
+
+else if showADR // This runs on every other bar of the current session
+	// Update the high and low for the current, active session
+	sessionHigh := math.max(sessionHigh, high)
+	sessionLow := math.min(sessionLow, low)
+
+// === Current Session ADR Projection (Live) ===
+if showADR and showCurrentADRLines and not na(currentADR) and not na(sessionHigh)
+	currentBullishLevel = sessionLow + currentADR
+	currentBearishLevel = sessionHigh - currentADR
+	[currentSessionRange, currentSessionUnits] = calculateRangeInUnits(sessionHigh, sessionLow)
+	currentDateText = getDayOfWeek(time) + " " + formatDate(time) + " (Live)"
+
+	lineStartBar = sessionStartBar
+
+	if showBullishADR
+		if na(currentBullishLine)
+			currentBullishLine := line.new(x1=lineStartBar, y1=currentBullishLevel, x2=bar_index + 1, y2=currentBullishLevel, color=adrLineColorUp, width=1, style=line.style_solid, extend=extend.right)
+			currentBullishLabel := label.new(x=bar_index, y=currentBullishLevel, text="Live ADR | Bullish | " + str.tostring(currentBullishLevel, format.mintick), style=label.style_label_left, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+		else
+			line.set_xy1(currentBullishLine, lineStartBar, currentBullishLevel)
+			line.set_y2(currentBullishLine, currentBullishLevel)
+			label.set_xy(currentBullishLabel, bar_index, currentBullishLevel)
+			label.set_text(currentBullishLabel, "Live ADR | Bullish | " + str.tostring(currentBullishLevel, format.mintick))
+
+	if showBearishADR
+		if na(currentBearishLine)
+			currentBearishLine := line.new(x1=lineStartBar, y1=currentBearishLevel, x2=bar_index + 1, y2=currentBearishLevel, color=adrLineColorDn, width=1, style=line.style_solid, extend=extend.right)
+			currentBearishLabel := label.new(x=bar_index, y=currentBearishLevel, text="Live ADR | Bearish | " + str.tostring(currentBearishLevel, format.mintick), style=label.style_label_left, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+		else
+			line.set_xy1(currentBearishLine, lineStartBar, currentBearishLevel)
+			line.set_y2(currentBearishLine, currentBearishLevel)
+			label.set_xy(currentBearishLabel, bar_index, currentBearishLevel)
+			label.set_text(currentBearishLabel, "Live ADR | Bearish | " + str.tostring(currentBearishLevel, format.mintick))
+
+// Clean up all ADR drawings if the master switch is off OR if on a Daily+ timeframe.
+if not showADR
+	// Also delete the table to ensure it's hidden
+	if not na(adrTable)
+		table.delete(adrTable)
+		adrTable := na
+
+	if not na(currentBullishLine)
+		line.delete(currentBullishLine), currentBullishLine := na
+		label.delete(currentBullishLabel), currentBullishLabel := na
+	if not na(currentBearishLine)
+		line.delete(currentBearishLine), currentBearishLine := na
+		label.delete(currentBearishLabel), currentBearishLabel := na
+
+	// ***FIXED***: Added a check to prevent looping on an empty array on bar 0.
+	if array.size(bullishADRLines) > 0
+		for i = 0 to array.size(bullishADRLines) - 1
+			line.delete(array.get(bullishADRLines, i))
+			label.delete(array.get(bullishADRLabels, i))
+	if array.size(bearishADRLines) > 0
+		for i = 0 to array.size(bearishADRLines) - 1
+			line.delete(array.get(bearishADRLines, i))
+			label.delete(array.get(bearishADRLabels, i))
+
+	array.clear(bullishADRLines), array.clear(bearishADRLines)
+	array.clear(bullishADRLabels), array.clear(bearishADRLabels)
+
+// Update counter and table display
+updateCounter := updateCounter + 1
+updateFreq = getUpdateFreq()
+
+if showADR and (updateCounter % updateFreq == 0)
+	if not na(adrTable)
+		table.delete(adrTable)
+
+	tablePos = getTablePosition(adrTablePosition)
+	tableSize = getTableSize(adrTableSize)
+
+	rowCount = 2
+	if showCurrentRange
+		rowCount += 1
+	if showRangeCompletion
+		rowCount += 1
+
+	adrTable := table.new(position=tablePos, columns=2, rows=rowCount, bgcolor=adrTableBgColor, border_width=1, border_color=adrTableBorderColor)
+
+	daysCount = array.size(dailyRanges)
+	daysText = daysCount == 0 ? "No Data" : str.tostring(daysCount) + (daysCount == 1 ? " Day" : " Days")
+
+	[currentDayRangeValue, currentUnits] = calculateRangeInUnits(sessionHigh, sessionLow)
+
+	adrValueStr = na(currentADR) ? "Calculating..." : formatRangeValue(currentADR, currentUnits)
+	currentRangeStr = formatRangeValue(currentDayRangeValue, currentUnits)
+
+	rangeCompletion = not na(currentADR) and currentADR > 0 ? (currentDayRangeValue / currentADR) * 100 : 0.0
+	completionStr = str.tostring(rangeCompletion, "#.#") + "%"
+
+	headerText = globalLookbackPeriod == 1 ? "Current Day" : daysText
+	table.cell(adrTable, 0, 0, "ADR Info", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80))
+	table.cell(adrTable, 1, 0, headerText, text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80))
+
+	table.cell(adrTable, 0, 1, "ADR", text_color=adrTableTextColor, text_size=tableSize)
+	table.cell(adrTable, 1, 1, adrValueStr, text_color=adrTableTextColor, text_size=tableSize)
+
+	currentRow = 2
+	if showCurrentRange
+		table.cell(adrTable, 0, currentRow, "Current", text_color=adrTableTextColor, text_size=tableSize)
+		table.cell(adrTable, 1, currentRow, currentRangeStr, text_color=adrTableTextColor, text_size=tableSize)
+		currentRow += 1
+
+	if showRangeCompletion
+		completionColor = rangeCompletion >= 100 ? adrCompletionHighColor : rangeCompletion >= 75 ? adrCompletionMidColor : adrCompletionLowColor
+		table.cell(adrTable, 0, currentRow, "Complete", text_color=adrTableTextColor, text_size=tableSize)
+		table.cell(adrTable, 1, currentRow, completionStr, text_color=adrTableTextColor, text_size=tableSize, bgcolor=completionColor)
+
+
+// ===========================================================================================================================================================================================
+// ================================================================================= NY Session ADR =======================================================================================
+// ===========================================================================================================================================================================================
+
+groupSessionADR = "- - - - - - - - - - - NY Session ADR - - - - - - - - - - - "
+
+// Table display settings
+nySessionAdrTablePosition = input.string("bottom_left", title="NY Session ADR Table Position", options=["top_left", "top_center", "top_right", "middle_left", "middle_center", "middle_right", "bottom_left", "bottom_center", "bottom_right"], group=groupSessionADR)
+nySessionAdrTableSize = input.string("normal", title="NY Session ADR Table Size", options=["tiny", "small", "normal", "large", "huge"], group=groupSessionADR)
+
+// Display options
+amShowCurrentRange = input.bool(true, title="Show Current NY AM Range", group=groupSessionADR)
+amShowRangeCompletion = input.bool(true, title="Show NY AM Range Completion %", group=groupSessionADR)
+amShowCurrentADRLines = input.bool(true, title="Show Current NY AM Session ADR Lines", group=groupSessionADR)
+
+// ADR Projection Settings
+amAdrDirection = input.string("Both", "NY AM ADR Direction", options=["Bullish", "Bearish", "Both"], group=groupSessionADR)
+amShowBullishADR = amAdrDirection == "Bullish" or amAdrDirection == "Both"
+amShowBearishADR = amAdrDirection == "Bearish" or amAdrDirection == "Both"
+
+// Effective setting
+showAMADR = showAMSessionADRMaster and timeframe.in_seconds() < 86400
+
+// --- Constants ---
+amAdrStartHour = 7
+amAdrEndHour = 12 // Session is 07:00 to 11:59
+pmAdrStartHour = 12
+pmAdrEndHour = 15 // Session is 12:00 to 14:59
+
+// ADR Projection Settings
+pmAdrDirection = input.string("Both", "NY PM ADR Direction", options=["Bullish", "Bearish", "Both"], group=groupSessionADR)
+pmShowBullishADR = pmAdrDirection == "Bullish" or pmAdrDirection == "Both"
+pmShowBearishADR = pmAdrDirection == "Bearish" or pmAdrDirection == "Both"
+pmShowCurrentADRLines = input.bool(true, title="Show Current NY PM Session ADR Lines", group=groupSessionADR)
+
+
+// --- State Variables ---
+var float[] amDailyRanges = array.new_float()
+var float[] pmDailyRanges = array.new_float()
+var float currentAMADR = na
+var float currentPMADR = na
+var table nySessionAdrTable = na
+var int amSessionStartBar = na
+var int pmSessionStartBar = na
+
+var float amSessionHigh = na
+var float amSessionLow = na
+var float pmSessionHigh = na
+var float pmSessionLow = na
+
+// --- Drawing Objects ---
+// For LIVE projections on the current day
+var line amCurrentBullishLine = na
+var line amCurrentBearishLine = na
+var label amCurrentBullishLabel = na
+var label amCurrentBearishLabel = na
+var line pmCurrentBullishLine = na
+var line pmCurrentBearishLine = na
+var label pmCurrentBullishLabel = na
+var label pmCurrentBearishLabel = na
+
+
+// For HISTORICAL projections on previous days
+var line[] amBullishADRLines = array.new<line>()
+var line[] amBearishADRLines = array.new<line>()
+var label[] amBullishADRLabels = array.new<label>()
+var label[] amBearishADRLabels = array.new<label>()
+
+
+// --- Time Checks ---
+// This function checks if the current bar is the start of a new day, regardless of timeframe.
+isNewDay_AM = ta.change(time("D"))
+// Check if the current bar is within the AM session (7:00:00 to 11:59:59)
+isInAmSession = hour(time, timezone) >= amAdrStartHour and hour(time, timezone) < amAdrEndHour
+// Check if the current bar is within the PM session (12:00:00 to 14:59:59)
+isInPmSession = hour(time, timezone) >= pmAdrStartHour and hour(time, timezone) < pmAdrEndHour
+
+
+// --- Helper Function for Cleanup ---
+cleanupHistoricalAmDrawings() =>
+    while array.size(amBullishADRLines) > globalLookbackPeriod
+        line.delete(array.shift(amBullishADRLines))
+        label.delete(array.shift(amBullishADRLabels))
+    while array.size(amBearishADRLines) > globalLookbackPeriod
+        line.delete(array.shift(amBearishADRLines))
+        label.delete(array.shift(amBearishADRLabels))
+
+// --- Main Logic ---
+if showAMADR
+    // --- Daily Calculation Update ---
+    // On the first bar of each new day, process the previous day's session data.
+    if isNewDay_AM
+        // Capture completed session data from the previous day (`[1]`).
+        prevHigh = amSessionHigh[1]
+        prevLow = amSessionLow[1]
+        prevStartBar = amSessionStartBar[1]
+        prevEndBar = bar_index[1] // The bar right before the day change
+
+        // If a valid session was tracked, calculate its range and update the ADR.
+        if not na(prevHigh) and not na(prevLow)
+            [rangeVal, _] = calculateRangeInUnits(prevHigh, prevLow)
+            array.push(amDailyRanges, rangeVal)
+            // Ensure the array doesn't grow past the lookback period.
+            while array.size(amDailyRanges) > globalLookbackPeriod
+                array.shift(amDailyRanges)
+
+            // Recalculate the Average Morning Range.
+            if array.size(amDailyRanges) > 0
+                sumOfRanges = array.sum(amDailyRanges)
+                currentAMADR := sumOfRanges / array.size(amDailyRanges)
+
+            // --- DRAW HISTORICAL ADR LINES FOR THE COMPLETED DAY ---
+            if not na(currentAMADR) and not na(prevStartBar)
+                bullishADRLevel = prevLow + currentAMADR
+                bearishADRLevel = prevHigh - currentAMADR
+                middleBar = math.round((prevStartBar + prevEndBar) / 2)
+
+                if amShowBullishADR
+                    bullishLine = line.new(prevStartBar, bullishADRLevel, prevEndBar, bullishADRLevel, color=adrLineColorUp, width=2)
+                    bullishLabel = label.new(middleBar, bullishADRLevel, 'NY AM ADR | Bullish | ' + str.tostring(bullishADRLevel, format.mintick), style=label.style_label_down, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+                    array.push(amBullishADRLines, bullishLine)
+                    array.push(amBullishADRLabels, bullishLabel)
+
+                if amShowBearishADR
+                    bearishLine = line.new(prevStartBar, bearishADRLevel, prevEndBar, bearishADRLevel, color=adrLineColorDn, width=2)
+                    bearishLabel = label.new(middleBar, bearishADRLevel, 'NY AM ADR | Bearish | ' + str.tostring(bearishADRLevel, format.mintick), style=label.style_label_down, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+                    array.push(amBearishADRLines, bearishLine)
+                    array.push(amBearishADRLabels, bearishLabel)
+
+        // --- Process Previous PM Session ---
+        prevPmHigh = pmSessionHigh[1]
+        prevPmLow = pmSessionLow[1]
+        if not na(prevPmHigh) and not na(prevPmLow)
+            [rangeVal, _] = calculateRangeInUnits(prevPmHigh, prevPmLow)
+            array.push(pmDailyRanges, rangeVal)
+            while array.size(pmDailyRanges) > globalLookbackPeriod
+                array.shift(pmDailyRanges)
+            if array.size(pmDailyRanges) > 0
+                sumOfRanges = array.sum(pmDailyRanges)
+                currentPMADR := sumOfRanges / array.size(pmDailyRanges)
+
+        // Reset trackers to `na` for the new day's session.
+        amSessionHigh := na, amSessionLow := na, amSessionStartBar := na
+        pmSessionHigh := na, pmSessionLow := na, pmSessionStartBar := na
+
+        // Cleanup old historical drawings
+        cleanupHistoricalAmDrawings()
+
+
+    // --- Live Session Tracking ---
+    // On every bar, check if we are inside the AM session window.
+    if isInAmSession
+        // If the session trackers are `na`, it's the first bar of the session. Initialize them.
+        if na(amSessionHigh)
+            amSessionHigh := high
+            amSessionLow := low
+            amSessionStartBar := bar_index
+        // For all other bars within the session, update the high and low.
+        else
+            amSessionHigh := math.max(amSessionHigh, high)
+            amSessionLow := math.min(amSessionLow, low)
+
+    // On every bar, check if we are inside the PM session window.
+    if isInPmSession
+        if na(pmSessionHigh)
+            pmSessionHigh := high
+            pmSessionLow := low
+            pmSessionStartBar := bar_index
+        else
+            pmSessionHigh := math.max(pmSessionHigh, high)
+            pmSessionLow := math.min(pmSessionLow, low)
+
+    // --- Live Projections ---
+    // Only draw projection lines if the feature is enabled, we have a valid ADR, and a session is active.
+    if amShowCurrentADRLines and not na(currentAMADR) and not na(amSessionHigh)
+        if isInAmSession
+            currentBullishLevel = amSessionLow + currentAMADR
+            currentBearishLevel = amSessionHigh - currentAMADR
+
+            // Draw/update Bullish Projection
+            if amShowBullishADR
+                if na(amCurrentBullishLine)
+                    amCurrentBullishLine := line.new(amSessionStartBar, currentBullishLevel, bar_index, currentBullishLevel, extend=extend.right, color=adrLineColorUp, style=line.style_dashed, width=1)
+                    amCurrentBullishLabel := label.new(bar_index, currentBullishLevel, "Live NY AM ADR | Bullish", style=label.style_label_left, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(amCurrentBullishLine, amSessionStartBar, currentBullishLevel)
+                    line.set_x2(amCurrentBullishLine, bar_index)
+                    label.set_xy(amCurrentBullishLabel, bar_index, currentBullishLevel)
+
+            // Draw/update Bearish Projection
+            if amShowBearishADR
+                if na(amCurrentBearishLine)
+                    amCurrentBearishLine := line.new(amSessionStartBar, currentBearishLevel, bar_index, currentBearishLevel, extend=extend.right, color=adrLineColorDn, style=line.style_dashed, width=1)
+                    amCurrentBearishLabel := label.new(bar_index, currentBearishLevel, "Live NY AM ADR | Bearish", style=label.style_label_left, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(amCurrentBearishLine, amSessionStartBar, currentBearishLevel)
+                    line.set_x2(amCurrentBearishLine, bar_index)
+                    label.set_xy(amCurrentBearishLabel, bar_index, currentBearishLevel)
+        // If not in the session, delete the live projection lines.
+        else
+            if not na(amCurrentBullishLine)
+                line.delete(amCurrentBullishLine), label.delete(amCurrentBullishLabel)
+                amCurrentBullishLine := na, amCurrentBullishLabel := na
+            if not na(amCurrentBearishLine)
+                line.delete(amCurrentBearishLine), label.delete(amCurrentBearishLabel)
+                amCurrentBearishLine := na, amCurrentBearishLabel := na
+
+    // --- Live Projections ---
+    if amShowCurrentADRLines and not na(currentAMADR) and not na(amSessionHigh)
+        if isInAmSession
+            currentBullishLevel = amSessionLow + currentAMADR
+            currentBearishLevel = amSessionHigh - currentAMADR
+
+            if amShowBullishADR
+                if na(amCurrentBullishLine)
+                    amCurrentBullishLine := line.new(amSessionStartBar, currentBullishLevel, bar_index, currentBullishLevel, extend=extend.right, color=adrLineColorUp, style=line.style_dashed, width=1)
+                    amCurrentBullishLabel := label.new(bar_index, currentBullishLevel, "Live NY AM ADR | Bullish", style=label.style_label_left, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(amCurrentBullishLine, amSessionStartBar, currentBullishLevel)
+                    line.set_x2(amCurrentBullishLine, bar_index)
+                    label.set_xy(amCurrentBullishLabel, bar_index, currentBullishLevel)
+
+            if amShowBearishADR
+                if na(amCurrentBearishLine)
+                    amCurrentBearishLine := line.new(amSessionStartBar, currentBearishLevel, bar_index, currentBearishLevel, extend=extend.right, color=adrLineColorDn, style=line.style_dashed, width=1)
+                    amCurrentBearishLabel := label.new(bar_index, currentBearishLevel, "Live NY AM ADR | Bearish", style=label.style_label_left, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(amCurrentBearishLine, amSessionStartBar, currentBearishLevel)
+                    line.set_x2(amCurrentBearishLine, bar_index)
+                    label.set_xy(amCurrentBearishLabel, bar_index, currentBearishLevel)
+        else
+            if not na(amCurrentBullishLine)
+                line.delete(amCurrentBullishLine), label.delete(amCurrentBullishLabel)
+                amCurrentBullishLine := na, amCurrentBullishLabel := na
+            if not na(amCurrentBearishLine)
+                line.delete(amCurrentBearishLine), label.delete(amCurrentBearishLabel)
+                amCurrentBearishLine := na, amCurrentBearishLabel := na
+
+    if pmShowCurrentADRLines and not na(currentPMADR) and not na(pmSessionHigh)
+        if isInPmSession
+            currentBullishLevel = pmSessionLow + currentPMADR
+            currentBearishLevel = pmSessionHigh - currentPMADR
+
+            if pmShowBullishADR
+                if na(pmCurrentBullishLine)
+                    pmCurrentBullishLine := line.new(pmSessionStartBar, currentBullishLevel, bar_index, currentBullishLevel, extend=extend.right, color=adrLineColorUp, style=line.style_dashed, width=1)
+                    pmCurrentBullishLabel := label.new(bar_index, currentBullishLevel, "Live NY PM ADR | Bullish", style=label.style_label_left, color=adrLineColorUp, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(pmCurrentBullishLine, pmSessionStartBar, currentBullishLevel)
+                    line.set_x2(pmCurrentBullishLine, bar_index)
+                    label.set_xy(pmCurrentBullishLabel, bar_index, currentBullishLevel)
+
+            if pmShowBearishADR
+                if na(pmCurrentBearishLine)
+                    pmCurrentBearishLine := line.new(pmSessionStartBar, currentBearishLevel, bar_index, currentBearishLevel, extend=extend.right, color=adrLineColorDn, style=line.style_dashed, width=1)
+                    pmCurrentBearishLabel := label.new(bar_index, currentBearishLevel, "Live NY PM ADR | Bearish", style=label.style_label_left, color=adrLineColorDn, textcolor=adrLabelTextColor, size=size.small)
+                else
+                    line.set_xy1(pmCurrentBearishLine, pmSessionStartBar, currentBearishLevel)
+                    line.set_x2(pmCurrentBearishLine, bar_index)
+                    label.set_xy(pmCurrentBearishLabel, bar_index, currentBearishLevel)
+        else
+            if not na(pmCurrentBullishLine)
+                line.delete(pmCurrentBullishLine), label.delete(pmCurrentBullishLabel)
+                pmCurrentBullishLine := na, pmCurrentBullishLabel := na
+            if not na(pmCurrentBearishLine)
+                line.delete(pmCurrentBearishLine), label.delete(pmCurrentBearishLabel)
+                pmCurrentBearishLine := na, pmCurrentBearishLabel := na
+
+    // --- Table Update ---
+    // On the last bar of the chart, draw/update the display table.
+    if barstate.islast
+        if not na(nySessionAdrTable)
+            table.delete(nySessionAdrTable)
+
+        tablePos = getTablePosition(nySessionAdrTablePosition)
+        tableSize = getTableSize(nySessionAdrTableSize)
+
+        rowCount = 2
+        if amShowCurrentRange
+            rowCount += 1
+        if amShowRangeCompletion
+            rowCount += 1
+
+        nySessionAdrTable := table.new(position=tablePos, columns=3, rows=rowCount, bgcolor=adrTableBgColor, border_width=1, border_color=adrTableBorderColor)
+
+        // --- AM Data Prep ---
+        amDaysCount = array.size(amDailyRanges)
+        amDaysText = amDaysCount == 0 ? "No Data" : str.tostring(amDaysCount)
+        [amCurrentDayRangeValue, amCurrentUnits] = calculateRangeInUnits(amSessionHigh, amSessionLow)
+        amAdrValueStr = na(currentAMADR) ? "..." : formatRangeValue(currentAMADR, amCurrentUnits)
+        amCurrentRangeStr = na(amSessionHigh) ? "N/A" : formatRangeValue(amCurrentDayRangeValue, amCurrentUnits)
+        amRangeCompletion = not na(currentAMADR) and currentAMADR > 0 and not na(amSessionHigh) ? (amCurrentDayRangeValue / currentAMADR) * 100 : 0.0
+        amCompletionStr = na(amSessionHigh) ? "N/A" : str.tostring(amRangeCompletion, "#.#") + "%"
+
+        // --- PM Data Prep (Placeholders for now) ---
+        pmDaysCount = array.size(pmDailyRanges)
+        pmDaysText = pmDaysCount == 0 ? "No Data" : str.tostring(pmDaysCount)
+        [pmCurrentDayRangeValue, pmCurrentUnits] = calculateRangeInUnits(pmSessionHigh, pmSessionLow)
+        pmAdrValueStr = na(currentPMADR) ? "..." : formatRangeValue(currentPMADR, pmCurrentUnits)
+        pmCurrentRangeStr = na(pmSessionHigh) ? "N/A" : formatRangeValue(pmCurrentDayRangeValue, pmCurrentUnits)
+        pmRangeCompletion = not na(currentPMADR) and currentPMADR > 0 and not na(pmSessionHigh) ? (pmCurrentDayRangeValue / currentPMADR) * 100 : 0.0
+        pmCompletionStr = na(pmSessionHigh) ? "N/A" : str.tostring(pmRangeCompletion, "#.#") + "%"
+
+        // --- Headers ---
+        table.cell(nySessionAdrTable, 0, 0, "NY Session ADR (" + amDaysText + "/" + pmDaysText + " Days)", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80))
+        table.cell(nySessionAdrTable, 1, 0, "AM", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80), text_halign=text.align_center)
+        table.cell(nySessionAdrTable, 2, 0, "PM", text_color=adrTableTextColor, text_size=tableSize, bgcolor=color.new(adrTableBorderColor, 80), text_halign=text.align_center)
+
+        // --- ADR Values ---
+        table.cell(nySessionAdrTable, 0, 1, "ADR", text_color=adrTableTextColor, text_size=tableSize)
+        table.cell(nySessionAdrTable, 1, 1, amAdrValueStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
+        table.cell(nySessionAdrTable, 2, 1, pmAdrValueStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
+
+        // --- Current Range ---
+        currentRow = 2
+        if amShowCurrentRange
+            table.cell(nySessionAdrTable, 0, currentRow, "Current", text_color=adrTableTextColor, text_size=tableSize)
+            table.cell(nySessionAdrTable, 1, currentRow, amCurrentRangeStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
+            table.cell(nySessionAdrTable, 2, currentRow, pmCurrentRangeStr, text_color=adrTableTextColor, text_size=tableSize, text_halign=text.align_center)
+            currentRow += 1
+
+        // --- Completion % ---
+        if amShowRangeCompletion
+            amCompletionColor = amRangeCompletion >= 100 ? adrCompletionHighColor : amRangeCompletion >= 75 ? adrCompletionMidColor : adrCompletionLowColor
+            pmCompletionColor = pmRangeCompletion >= 100 ? adrCompletionHighColor : pmRangeCompletion >= 75 ? adrCompletionMidColor : adrCompletionLowColor
+            table.cell(nySessionAdrTable, 0, currentRow, "Complete", text_color=adrTableTextColor, text_size=tableSize)
+            table.cell(nySessionAdrTable, 1, currentRow, amCompletionStr, text_color=adrTableTextColor, text_size=tableSize, bgcolor=amCompletionColor, text_halign=text.align_center)
+            table.cell(nySessionAdrTable, 2, currentRow, pmCompletionStr, text_color=adrTableTextColor, text_size=tableSize, bgcolor=pmCompletionColor, text_halign=text.align_center)
+
+// --- Cleanup on Master Toggle Off ---
+if not showAMADR
+    if not na(nySessionAdrTable)
+        table.delete(nySessionAdrTable)
+        nySessionAdrTable := na
+    // Cleanup live lines
+    if not na(amCurrentBullishLine)
+        line.delete(amCurrentBullishLine), label.delete(amCurrentBullishLabel)
+        amCurrentBullishLine := na, amCurrentBullishLabel := na
+    if not na(amCurrentBearishLine)
+        line.delete(amCurrentBearishLine), label.delete(amCurrentBearishLabel)
+        amCurrentBearishLine := na, amCurrentBearishLabel := na
+    if not na(pmCurrentBullishLine)
+        line.delete(pmCurrentBullishLine), label.delete(pmCurrentBullishLabel)
+        pmCurrentBullishLine := na, pmCurrentBullishLabel := na
+    if not na(pmCurrentBearishLine)
+        line.delete(pmCurrentBearishLine), label.delete(pmCurrentBearishLabel)
+        pmCurrentBearishLine := na, pmCurrentBearishLabel := na
+    // Cleanup historical lines
+    cleanupHistoricalAmDrawings()
